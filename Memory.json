@@ -98,5 +98,10 @@
     "时间": "2026-09-09 15:58:57",
     "输入摘要": "将配置提取到csv表格中，后续方便配置",
     "输出摘要": "完成战斗静态配置 CSV 化：trigrams/hexagrams/weapons/enemies/deck/battle_default 六张表，新增 CsvBattleConfigLoader 与 ResourcesBattleConfigLoader，原型启动和 EditMode 测试统一从 Resources 加载；更新配置规范文档；Roslyn 编译通过，8/8 测试通过"
+  },
+  {
+    "时间": "2026-09-09 16:24:49",
+    "输入摘要": "推送到远端",
+    "输出摘要": "提交 CSV 配置化变更 cf6e22b 并推送到 origin/main（485d10d..cf6e22b）；未提交 Unity 自动生成的 .meta、SampleScene 和 ProjectSettings 变更"
   }
 ]

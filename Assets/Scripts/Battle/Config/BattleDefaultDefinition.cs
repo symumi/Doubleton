@@ -10,6 +10,8 @@ namespace BalartroLike.Battle
         public string DefaultWeaponId { get; }
         public string DefaultEnemyId { get; }
         public int DefaultSeed { get; }
+        public string[] DefaultArtifactIds { get; }
+        public string[] DefaultTalismanIds { get; }
 
         public BattleDefaultDefinition(
             int playerMaxHp,
@@ -19,7 +21,9 @@ namespace BalartroLike.Battle
             int handSize,
             string defaultWeaponId,
             string defaultEnemyId,
-            int defaultSeed)
+            int defaultSeed,
+            string[] defaultArtifactIds,
+            string[] defaultTalismanIds)
         {
             PlayerMaxHp = playerMaxHp;
             PlayerMaxEnergy = playerMaxEnergy;
@@ -29,6 +33,8 @@ namespace BalartroLike.Battle
             DefaultWeaponId = defaultWeaponId;
             DefaultEnemyId = defaultEnemyId;
             DefaultSeed = defaultSeed;
+            DefaultArtifactIds = defaultArtifactIds;
+            DefaultTalismanIds = defaultTalismanIds;
         }
     }
 }

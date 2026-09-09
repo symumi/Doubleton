@@ -3,6 +3,7 @@ namespace BalartroLike.Battle
     public sealed class DamageBreakdown
     {
         public int BaseDamage { get; }
+        public int WeaponAffinityMultiplier { get; }
         public int HexagramMultiplier { get; }
         public int ElementMultiplier { get; }
         public int ArtifactAdditive { get; }
@@ -15,6 +16,7 @@ namespace BalartroLike.Battle
 
         public DamageBreakdown(
             int baseDamage,
+            int weaponAffinityMultiplier,
             int hexagramMultiplier,
             int elementMultiplier,
             int artifactAdditive,
@@ -26,6 +28,7 @@ namespace BalartroLike.Battle
             int finalDamage)
         {
             BaseDamage = baseDamage;
+            WeaponAffinityMultiplier = weaponAffinityMultiplier;
             HexagramMultiplier = hexagramMultiplier;
             ElementMultiplier = elementMultiplier;
             ArtifactAdditive = artifactAdditive;
@@ -40,6 +43,7 @@ namespace BalartroLike.Battle
         public string ToFormula()
         {
             return BaseDamage
+                + " × " + Format(WeaponAffinityMultiplier)
                 + " × " + Format(HexagramMultiplier)
                 + " × " + Format(ElementMultiplier)
                 + " × " + Format(ArtifactAdditive)

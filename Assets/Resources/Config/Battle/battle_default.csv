@@ -7,3 +7,5 @@ handSize,6
 defaultWeaponId,weapon_iron_sword
 defaultEnemyId,enemy_wood_demon
 defaultSeed,20260909
+defaultArtifactIds,artifact_first_strike;artifact_fire_lord;artifact_tai_truth
+defaultTalismanIds,talisman_energy;talisman_shield;talisman_draw

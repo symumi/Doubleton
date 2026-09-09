@@ -1,0 +1,4 @@
+id,displayName,effects,description
+talisman_energy,补天丹,GainEnergy|Self|Flat|1|None|0|0,本回合灵力 +1
+talisman_shield,护身符,GainShield|Self|Flat|6|None|0|0,获得 6 点护盾
+talisman_draw,观星符,DrawCard|Self|Count|1|None|0|0,抽 1 张牌

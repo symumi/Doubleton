@@ -13,16 +13,39 @@ namespace BalartroLike.Battle
             state.Player.TrySpendEnergy(1);
 
             events.Add(BattleEvent.HexagramFormed(calculation.Hexagram));
-            int absorbed = state.Enemy.ApplyDamage(calculation.Damage.RawDamage);
-            events.Add(BattleEvent.DamageDealt(calculation.Damage.RawDamage));
-            if (absorbed > 0)
+            // TODO: 多敌人战斗接入后，AllTargets 应对每个目标分别结算 HitCount 次。
+            int totalDamage = 0;
+            int totalAbsorbed = 0;
+            int resolvedHits = 0;
+            for (int hit = 0; hit < calculation.HitCount && state.Enemy.Hp > 0; hit++)
             {
-                events.Add(new BattleEvent(BattleEventType.ShieldChanged, "敌方护盾吸收 " + absorbed, absorbed));
+                totalAbsorbed += state.Enemy.ApplyDamage(calculation.Damage.RawDamage);
+                totalDamage += calculation.Damage.RawDamage;
+                resolvedHits++;
+            }
+
+            events.Add(new BattleEvent(
+                BattleEventType.DamageDealt,
+                "造成 " + totalDamage + " 点伤害（" + resolvedHits + " 段）",
+                totalDamage));
+            if (totalAbsorbed > 0)
+            {
+                events.Add(new BattleEvent(BattleEventType.ShieldChanged, "敌方护盾吸收 " + totalAbsorbed, totalAbsorbed));
             }
 
             ApplyEffects(state, calculation.Effects, events);
+            AddEnchantments(state.Player.Weapon, calculation.Hexagram.Inner, calculation.Effects);
+            ResolveArtifacts(state, calculation.Hexagram, events);
             state.DiscardPile.Add(innerCard);
             state.DiscardPile.Add(outerCard);
+            state.PlaysThisTurn++;
+            CheckBattleEnd(state, events);
+        }
+
+        public void ResolveTalisman(BattleState state, TalismanDefinition talisman, List<BattleEvent> events)
+        {
+            events.Add(new BattleEvent(BattleEventType.TalismanUsed, "使用" + talisman.DisplayName));
+            ApplyEffects(state, new List<EffectOperation>(talisman.Effects), events);
             CheckBattleEnd(state, events);
         }
 
@@ -82,8 +105,11 @@ namespace BalartroLike.Battle
                 {
                     if (effect.Target == EffectTarget.Enemy)
                     {
-                        state.Enemy.AddStatus(effect.Status, effect.Stacks, effect.Duration);
-                        events.Add(new BattleEvent(BattleEventType.StatusChanged, "敌方获得状态", effect.Stacks));
+                        bool applied = state.Enemy.AddStatus(effect.Status, effect.Stacks, effect.Duration);
+                        events.Add(new BattleEvent(
+                            BattleEventType.StatusChanged,
+                            applied ? "敌方获得状态" : "敌方免疫状态",
+                            applied ? effect.Stacks : 0));
                     }
                     else
                     {
@@ -104,6 +130,35 @@ namespace BalartroLike.Battle
                 else if (effect.Type == EffectType.DrawCard)
                 {
                     DrawCards(state, effect.Value, events);
+                }
+            }
+        }
+
+        private static void AddEnchantments(WeaponState weapon, TrigramId source, List<EffectOperation> effects)
+        {
+            for (int i = 0; i < effects.Count; i++)
+            {
+                if (effects[i].Duration > 0)
+                {
+                    weapon.AddEnchant(source, effects[i]);
+                }
+            }
+        }
+
+        private static void ResolveArtifacts(BattleState state, HexagramDefinition hexagram, List<BattleEvent> events)
+        {
+            for (int i = 0; i < state.Artifacts.Count; i++)
+            {
+                ArtifactDefinition artifact = state.Artifacts[i];
+                if (!ArtifactRules.Matches(state, artifact, hexagram))
+                {
+                    continue;
+                }
+
+                events.Add(new BattleEvent(BattleEventType.ArtifactTriggered, "法宝触发：" + artifact.DisplayName));
+                if (artifact.TriggerType == ArtifactTriggerType.AfterPlay)
+                {
+                    ApplyEffects(state, new List<EffectOperation>(artifact.Effects), events);
                 }
             }
         }

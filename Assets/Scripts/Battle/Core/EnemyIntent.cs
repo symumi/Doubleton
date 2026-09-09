@@ -2,6 +2,7 @@ namespace BalartroLike.Battle
 {
     public sealed class EnemyIntent
     {
+        public string Id { get; }
         public EnemyIntentType Type { get; }
         public int Power { get; }
         public StatusId Status { get; }
@@ -15,8 +16,10 @@ namespace BalartroLike.Battle
             StatusId status = StatusId.None,
             int statusStacks = 0,
             int statusDuration = 0,
-            string displayText = "")
+            string displayText = "",
+            string id = "")
         {
+            Id = id;
             Type = type;
             Power = power;
             Status = status;

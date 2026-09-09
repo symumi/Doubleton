@@ -1,0 +1,9 @@
+id,shopId,displayName,effectType,effectValue,price,description
+shop01_heal,shop_01,回春丹,MaxHp,6,25,最大生命 +6
+shop01_forge,shop_01,炼器,WeaponPower,1,30,武器基础力道 +1
+shop01_delete,shop_01,忘尘散,DeleteCard,1,25,删除牌组第一张牌
+shop01_stones,shop_01,聚灵囊,SpiritStones,20,15,获得 20 灵石
+shop02_heal,shop_02,回春丹,MaxHp,8,30,最大生命 +8
+shop02_forge,shop_02,炼器,WeaponPower,1,35,武器基础力道 +1
+shop02_delete,shop_02,忘尘散,DeleteCard,1,35,删除牌组第一张牌
+shop02_stones,shop_02,聚灵囊,SpiritStones,30,20,获得 30 灵石

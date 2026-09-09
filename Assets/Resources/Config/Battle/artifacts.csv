@@ -1,0 +1,4 @@
+id,displayName,triggerType,conditionType,conditionValue,effects,description
+artifact_first_strike,连山印,BeforeDamage,FirstPlayEachTurn,,ModifyDamage|Self|Percent|10000|None|0|0,每回合第一手伤害 +100%
+artifact_fire_lord,火德星君令,BeforeDamage,InnerElement,Fire,ModifyDamage|Self|Multiplier|15000|None|0|0,火属性内卦伤害 ×1.5
+artifact_tai_truth,泰卦真解,AfterPlay,Hexagram,kun_qian,GainEnergy|Self|Flat|1|None|0|0;DrawCard|Self|Count|1|None|0|0,合成地天泰时回复 1 灵力并抽 1 张牌

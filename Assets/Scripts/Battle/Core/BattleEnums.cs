@@ -66,6 +66,15 @@ namespace BalartroLike.Battle
         EnemyIntentChanged = 9,
         EnemyActed = 10,
         BattleEnded = 11,
+        ArtifactTriggered = 12,
+        TalismanUsed = 13,
+    }
+
+    public enum AttackPattern
+    {
+        Single = 0,
+        MultiHit = 1,
+        AllTargets = 2,
     }
 
     public enum EnemyIntentType
@@ -73,6 +82,33 @@ namespace BalartroLike.Battle
         Attack = 0,
         Defend = 1,
         Debuff = 2,
+    }
+
+    public enum EnemyKind
+    {
+        Normal = 0,
+        Elite = 1,
+        Boss = 2,
+    }
+
+    public enum EnemyIntentMode
+    {
+        Sequence = 0,
+        Weighted = 1,
+    }
+
+    public enum EnemyIntentConditionType
+    {
+        Always = 0,
+        HpBelow = 1,
+        HpAbove = 2,
+        TurnAtLeast = 3,
+    }
+
+    public enum EnemyRuleType
+    {
+        None = 0,
+        StatusImmune = 1,
     }
 
     public enum StatusId
@@ -112,5 +148,19 @@ namespace BalartroLike.Battle
         Multiplier = 2,
         Stacks = 3,
         Count = 4,
+    }
+
+    public enum ArtifactTriggerType
+    {
+        BeforeDamage = 0,
+        AfterPlay = 1,
+    }
+
+    public enum ArtifactConditionType
+    {
+        Always = 0,
+        FirstPlayEachTurn = 1,
+        InnerElement = 2,
+        Hexagram = 3,
     }
 }

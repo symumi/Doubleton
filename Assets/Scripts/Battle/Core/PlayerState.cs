@@ -24,6 +24,17 @@ namespace BalartroLike.Battle
             Statuses = new List<StatusInstance>();
         }
 
+        public void Restore(int hp, int shield, int energy, IReadOnlyList<StatusInstance> statuses)
+        {
+            Hp = hp > MaxHp ? MaxHp : hp < 0 ? 0 : hp;
+            Shield = shield < 0 ? 0 : shield;
+            Energy = energy > MaxEnergy ? MaxEnergy : energy < 0 ? 0 : energy;
+            Statuses.Clear();
+            if (statuses != null)
+            {
+                Statuses.AddRange(statuses);
+            }
+        }
         public bool TrySpendEnergy(int amount)
         {
             if (Energy < amount)

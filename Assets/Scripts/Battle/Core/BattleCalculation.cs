@@ -8,6 +8,7 @@ namespace BalartroLike.Battle
         public int OuterCardUid { get; }
         public HexagramDefinition Hexagram { get; }
         public DamageBreakdown Damage { get; }
+        public AttackPattern AttackPattern { get; }
         public int HitCount { get; }
         public List<EffectOperation> Effects { get; }
 
@@ -16,6 +17,7 @@ namespace BalartroLike.Battle
             int outerCardUid,
             HexagramDefinition hexagram,
             DamageBreakdown damage,
+            AttackPattern attackPattern,
             int hitCount,
             List<EffectOperation> effects)
         {
@@ -23,6 +25,7 @@ namespace BalartroLike.Battle
             OuterCardUid = outerCardUid;
             Hexagram = hexagram;
             Damage = damage;
+            AttackPattern = attackPattern;
             HitCount = hitCount;
             Effects = effects;
         }

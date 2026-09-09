@@ -13,8 +13,11 @@ namespace BalartroLike.Battle
             "hexagrams.csv",
             "weapons.csv",
             "enemies.csv",
+            "enemy_intents.csv",
             "deck.csv",
             "battle_default.csv",
+            "artifacts.csv",
+            "talismans.csv",
         };
 
         public static void LoadIfNeeded()

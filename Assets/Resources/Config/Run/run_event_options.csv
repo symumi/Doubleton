@@ -1,0 +1,4 @@
+eventId,title,description,optionId,optionText,effectType,effectValue,resultText
+event_01,古碑残影,残碑中传来若有若无的道音。,option_a,吸收灵气,SpiritStones,30,灵气凝作灵石。灵石 +30
+event_01,古碑残影,残碑中传来若有若无的道音。,option_b,参悟护体,MaxHp,6,道意护住经脉。最大生命 +6
+event_01,古碑残影,残碑中传来若有若无的道音。,option_c,离开,None,0,你压下贪念转身离去。

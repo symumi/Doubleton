@@ -4,13 +4,20 @@ namespace BalartroLike.Battle
     {
         public int Order { get; }
         public TrigramId Source { get; }
+        public EffectOperation Effect { get; }
         public int RemainingTurns { get; private set; }
 
-        public EnchantInstance(int order, TrigramId source, int remainingTurns)
+        public EnchantInstance(int order, TrigramId source, EffectOperation effect)
         {
             Order = order;
             Source = source;
-            RemainingTurns = remainingTurns;
+            Effect = effect;
+            RemainingTurns = effect.Duration;
+        }
+
+        public void RestoreRemainingTurns(int remainingTurns)
+        {
+            RemainingTurns = remainingTurns < 0 ? 0 : remainingTurns;
         }
 
         public void TickTurn()

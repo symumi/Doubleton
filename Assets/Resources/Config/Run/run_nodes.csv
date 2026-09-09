@@ -1,0 +1,10 @@
+id,realmId,displayName,type,enemyId,rewardSpiritStones
+node_01,REALM_QI_REFINING,炼气一层,NormalBattle,enemy_wood_demon,30
+node_02,REALM_QI_REFINING,炼气圆满,EliteBattle,enemy_wood_demon,40
+node_03,REALM_QI_REFINING,筑基渡劫,TribulationBattle,enemy_wood_demon,70
+node_04,REALM_FOUNDATION,筑基初期,NormalBattle,enemy_wood_demon,35
+node_05,REALM_FOUNDATION,筑基后期,EliteBattle,enemy_wood_demon,45
+node_06,REALM_FOUNDATION,金丹渡劫,TribulationBattle,enemy_wood_demon,75
+node_07,REALM_GOLDEN_CORE,金丹初期,NormalBattle,enemy_wood_demon,40
+node_08,REALM_GOLDEN_CORE,金丹后期,EliteBattle,enemy_wood_demon,50
+node_09,REALM_GOLDEN_CORE,元婴渡劫,TribulationBattle,enemy_wood_demon,80

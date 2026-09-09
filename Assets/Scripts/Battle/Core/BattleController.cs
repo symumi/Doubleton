@@ -9,6 +9,7 @@ namespace BalartroLike.Battle
 
         private readonly BattleCalculator _calculator;
         private readonly BattleResolver _resolver;
+        private readonly EnemyIntentSelector _intentSelector;
         private readonly Random _random;
 
         public BattleController(BattleState state)
@@ -16,10 +17,19 @@ namespace BalartroLike.Battle
             State = state;
             _calculator = new BattleCalculator();
             _resolver = new BattleResolver();
+            _intentSelector = new EnemyIntentSelector();
             _random = new Random(state.Seed);
         }
 
-        public static BattleController CreatePrototype(int seed = -1)
+        public static BattleController CreatePrototype(
+            int seed = -1,
+            string enemyId = null,
+            IReadOnlyList<DeckEntryDefinition> deckEntries = null,
+            int playerMaxHpBonus = 0,
+            int weaponPowerBonus = 0,
+            string weaponId = null,
+            IReadOnlyList<string> artifactIds = null,
+            IReadOnlyList<string> talismanIds = null)
         {
             if (!BattleConfigDatabase.IsLoaded)
             {
@@ -27,32 +37,40 @@ namespace BalartroLike.Battle
             }
 
             BattleDefaultDefinition defaults = BattleConfigDatabase.Default;
-            WeaponDefinition weaponDefinition = BattleConfigDatabase.GetWeapon(defaults.DefaultWeaponId);
+            WeaponDefinition weaponDefinition = BattleConfigDatabase.GetWeapon(weaponId ?? defaults.DefaultWeaponId);
             WeaponState weapon = new WeaponState(
                 weaponDefinition.Id,
                 weaponDefinition.DisplayName,
-                weaponDefinition.BasePower,
+                weaponDefinition.BasePower + weaponPowerBonus,
+                weaponDefinition.AttackPattern,
+                weaponDefinition.HitCount,
                 weaponDefinition.ElementAffinity,
                 weaponDefinition.MaxEnchantSlots);
 
             PlayerState player = new PlayerState(
-                defaults.PlayerMaxHp,
+                defaults.PlayerMaxHp + playerMaxHpBonus,
                 defaults.PlayerMaxEnergy,
                 defaults.EnergyPerTurn,
                 weapon);
 
-            EnemyDefinition enemyDefinition = BattleConfigDatabase.GetEnemy(defaults.DefaultEnemyId);
+            EnemyDefinition enemyDefinition = BattleConfigDatabase.GetEnemy(enemyId ?? defaults.DefaultEnemyId);
             EnemyState enemy = new EnemyState(
                 enemyDefinition.Id,
                 enemyDefinition.DisplayName,
                 enemyDefinition.Element,
                 enemyDefinition.MaxHp,
-                enemyDefinition.BasePower);
+                enemyDefinition.BasePower,
+                enemyDefinition.Kind,
+                enemyDefinition.IntentMode,
+                enemyDefinition.Intents,
+                enemyDefinition.RuleType);
 
             BattleState state = new BattleState(seed >= 0 ? seed : defaults.DefaultSeed, player, enemy);
             state.DiscardLimit = defaults.DiscardLimit;
             state.HandLimit = defaults.HandSize;
-            BuildDeck(state);
+            BuildDeck(state, deckEntries ?? BattleConfigDatabase.Deck);
+            BuildArtifacts(state, artifactIds ?? defaults.DefaultArtifactIds);
+            BuildTalismans(state, talismanIds ?? defaults.DefaultTalismanIds);
 
             BattleController controller = new BattleController(state);
             controller.ShuffleDrawPile();
@@ -117,6 +135,35 @@ namespace BalartroLike.Battle
             }
 
             return preview;
+        }
+
+        public BattleCommandResult UseTalisman(int index)
+        {
+            if (State.Phase != BattlePhase.PlayerAction)
+            {
+                return BattleCommandResult.Fail("当前不能使用符箓");
+            }
+
+            if (index < 0 || index >= State.Talismans.Count)
+            {
+                return BattleCommandResult.Fail("符箓不存在");
+            }
+
+            TalismanDefinition talisman = State.Talismans[index];
+            if (!CanUseTalisman(talisman))
+            {
+                return BattleCommandResult.Fail("符箓当前无法生效");
+            }
+
+            State.Phase = BattlePhase.Resolving;
+            _resolver.ResolveTalisman(State, talisman, State.Events);
+            State.Talismans.RemoveAt(index);
+            if (State.Result == BattleResultType.None)
+            {
+                State.Phase = BattlePhase.PlayerAction;
+            }
+
+            return BattleCommandResult.Ok(null);
         }
 
         public BattleCommandResult DiscardCards(int[] cardUids)
@@ -193,6 +240,7 @@ namespace BalartroLike.Battle
         private void StartPlayerTurn()
         {
             State.Turn++;
+            State.PlaysThisTurn = 0;
             State.Phase = BattlePhase.PlayerTurnStart;
             State.Player.GainEnergy(State.Player.EnergyPerTurn);
             State.DiscardsRemaining = State.DiscardLimit;
@@ -242,39 +290,16 @@ namespace BalartroLike.Battle
             }
         }
 
-        // TODO: 当前为原型交替意图，后续替换为 EnemyDefinition 意图池。
         private void SelectEnemyIntent()
         {
-            EnemyIntent intent;
-            if (State.Turn % 2 == 0)
-            {
-                intent = new EnemyIntent(
-                    EnemyIntentType.Debuff,
-                    State.Enemy.BasePower,
-                    StatusId.Weak,
-                    1,
-                    1,
-                    "虚弱：下回合造成伤害降低");
-            }
-            else
-            {
-                intent = new EnemyIntent(
-                    EnemyIntentType.Attack,
-                    State.Enemy.BasePower,
-                    StatusId.None,
-                    0,
-                    0,
-                    "攻击 " + State.Enemy.BasePower);
-            }
-
+            EnemyIntent intent = _intentSelector.SelectNext(State.Enemy, State.Turn, _random);
             State.Enemy.SetIntent(intent);
             State.Events.Add(new BattleEvent(BattleEventType.EnemyIntentChanged, intent.DisplayText, intent.Power));
         }
 
-        private static void BuildDeck(BattleState state)
+        private static void BuildDeck(BattleState state, IReadOnlyList<DeckEntryDefinition> entries)
         {
             int uid = 1;
-            IReadOnlyList<DeckEntryDefinition> entries = BattleConfigDatabase.Deck;
             for (int i = 0; i < entries.Count; i++)
             {
                 DeckEntryDefinition entry = entries[i];
@@ -284,6 +309,43 @@ namespace BalartroLike.Battle
                     uid++;
                 }
             }
+        }
+
+        private static void BuildArtifacts(BattleState state, IReadOnlyList<string> artifactIds)
+        {
+            for (int i = 0; i < artifactIds.Count; i++)
+            {
+                if (BattleConfigDatabase.TryGetArtifact(artifactIds[i], out ArtifactDefinition artifact))
+                {
+                    state.Artifacts.Add(artifact);
+                }
+            }
+        }
+
+        private static void BuildTalismans(BattleState state, IReadOnlyList<string> talismanIds)
+        {
+            for (int i = 0; i < talismanIds.Count; i++)
+            {
+                if (BattleConfigDatabase.TryGetTalisman(talismanIds[i], out TalismanDefinition talisman))
+                {
+                    state.Talismans.Add(talisman);
+                }
+            }
+        }
+
+        private bool CanUseTalisman(TalismanDefinition talisman)
+        {
+            for (int i = 0; i < talisman.Effects.Length; i++)
+            {
+                EffectOperation effect = talisman.Effects[i];
+                if (effect.Type == EffectType.DrawCard
+                    && (State.Hand.Count >= State.HandLimit || State.DrawPile.Count == 0))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

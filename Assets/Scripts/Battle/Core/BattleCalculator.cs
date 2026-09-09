@@ -7,6 +7,7 @@ namespace BalartroLike.Battle
     {
         private const int BasisPoints = 10000;
         private const int CriticalMultiplier = 15000;
+        private const int WeaponAffinityMultiplier = 12500;
 
         public BattleCalculation CalculatePlay(BattleState state, CardInstance innerCard, CardInstance outerCard)
         {
@@ -14,18 +15,22 @@ namespace BalartroLike.Battle
             TrigramDefinition outer = TrigramCatalog.Get(outerCard.Trigram);
             HexagramDefinition hexagram = HexagramCatalog.Get(outerCard.Trigram, innerCard.Trigram);
 
+            int weaponAffinityMultiplier = GetWeaponAffinityMultiplier(state.Player.Weapon, inner);
             int hexagramMultiplier = hexagram.DamageMultiplierOverride
                 ?? Multiply(inner.InnerDamageMultiplier, outer.OuterDamageMultiplier);
             int elementMultiplier = ElementRules.GetDamageMultiplier(inner.Element, state.Enemy.Element);
-            // TODO: 法宝系统接入后从 BattleState 汇总加法乘区和乘法乘区。
-            int artifactAdditive = BasisPoints;
-            int artifactMultiplicative = BasisPoints;
+            ArtifactRules.CollectDamageModifiers(
+                state,
+                hexagram,
+                out int artifactAdditive,
+                out int artifactMultiplicative);
             int statusMultiplier = GetStatusMultiplier(state);
             bool guaranteedCritical = hexagram.GuaranteedCriticalOverride ?? outer.OuterGuaranteedCritical;
             int criticalMultiplier = guaranteedCritical ? CriticalMultiplier : BasisPoints;
 
             int baseDamage = state.Player.Weapon.BasePower + innerCard.Qi + outerCard.Qi;
-            int rawDamage = ApplyMultiplier(baseDamage, hexagramMultiplier);
+            int rawDamage = ApplyMultiplier(baseDamage, weaponAffinityMultiplier);
+            rawDamage = ApplyMultiplier(rawDamage, hexagramMultiplier);
             rawDamage = ApplyMultiplier(rawDamage, elementMultiplier);
             rawDamage = ApplyMultiplier(rawDamage, artifactAdditive);
             rawDamage = ApplyMultiplier(rawDamage, artifactMultiplicative);
@@ -36,6 +41,7 @@ namespace BalartroLike.Battle
             int finalDamage = rawDamage - shieldAbsorbed;
             DamageBreakdown damage = new DamageBreakdown(
                 baseDamage,
+                weaponAffinityMultiplier,
                 hexagramMultiplier,
                 elementMultiplier,
                 artifactAdditive,
@@ -47,7 +53,27 @@ namespace BalartroLike.Battle
                 finalDamage);
 
             List<EffectOperation> effects = CollectEffects(inner, outer, hexagram);
-            return new BattleCalculation(innerCard.Uid, outerCard.Uid, hexagram, damage, inner.InnerHitCount, effects);
+            int hitCount = GetHitCount(state.Player.Weapon, inner);
+            return new BattleCalculation(
+                innerCard.Uid,
+                outerCard.Uid,
+                hexagram,
+                damage,
+                state.Player.Weapon.AttackPattern,
+                hitCount,
+                effects);
+        }
+
+        private static int GetWeaponAffinityMultiplier(WeaponState weapon, TrigramDefinition inner)
+        {
+            return weapon.ElementAffinity.HasValue && weapon.ElementAffinity.Value == inner.Element
+                ? WeaponAffinityMultiplier
+                : BasisPoints;
+        }
+
+        private static int GetHitCount(WeaponState weapon, TrigramDefinition inner)
+        {
+            return Math.Max(1, weapon.HitCount) * Math.Max(1, inner.InnerHitCount);
         }
 
         private static int GetStatusMultiplier(BattleState state)

@@ -9,10 +9,13 @@ namespace BalartroLike.Battle
         public int DiscardsRemaining { get; set; }
         public int DiscardLimit { get; set; }
         public int HandLimit { get; set; }
+        public int PlaysThisTurn { get; set; }
         public BattlePhase Phase { get; set; }
         public BattleResultType Result { get; set; }
         public PlayerState Player { get; }
         public EnemyState Enemy { get; }
+        public List<ArtifactDefinition> Artifacts { get; }
+        public List<TalismanDefinition> Talismans { get; }
         public List<CardInstance> DrawPile { get; }
         public List<CardInstance> DiscardPile { get; }
         public List<CardInstance> Hand { get; }
@@ -23,6 +26,8 @@ namespace BalartroLike.Battle
             Seed = seed;
             Player = player;
             Enemy = enemy;
+            Artifacts = new List<ArtifactDefinition>();
+            Talismans = new List<TalismanDefinition>();
             DrawPile = new List<CardInstance>();
             DiscardPile = new List<CardInstance>();
             Hand = new List<CardInstance>();

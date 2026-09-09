@@ -1,0 +1,5 @@
+id,type,power,status,statusStacks,statusDuration,weight,cooldown,conditionType,conditionValue,displayText
+intent_wood_attack,Attack,6,None,0,0,4,0,Always,0,攻击 6
+intent_wood_defend,Defend,4,None,0,0,2,1,Always,0,获得 4 点护盾
+intent_wood_weaken,Debuff,0,Weak,1,1,2,1,Always,0,施加 1 层虚弱
+intent_wood_burst,Attack,9,None,0,0,3,2,HpBelow,50,蓄力重击 9

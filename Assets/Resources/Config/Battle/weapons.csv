@@ -1,2 +1,4 @@
-id,displayName,basePower,elementAffinity,maxEnchantSlots
-weapon_iron_sword,玄铁重剑,6,,3
+id,displayName,basePower,attackPattern,hitCount,elementAffinity,maxEnchantSlots
+weapon_iron_sword,玄铁重剑,6,Single,1,,3
+weapon_qingfeng,青锋剑诀,4,MultiHit,3,Wood,3
+weapon_rainstorm,暴雨梨花,3,AllTargets,2,Metal,3

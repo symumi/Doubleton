@@ -1,2 +1,2 @@
-id,displayName,element,maxHp,basePower
-enemy_wood_demon,木魈,Wood,48,6
+id,displayName,kind,element,maxHp,basePower,intentMode,intentIds,ruleType
+enemy_wood_demon,木魈,Normal,Wood,48,6,Sequence,intent_wood_attack;intent_wood_defend;intent_wood_weaken;intent_wood_burst,None

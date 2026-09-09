@@ -19,12 +19,39 @@ namespace BalartroLike.Battle
             _random = new Random(state.Seed);
         }
 
-        public static BattleController CreatePrototype(int seed = 20260909)
+        public static BattleController CreatePrototype(int seed = -1)
         {
-            WeaponState weapon = new WeaponState("weapon_iron_sword", "玄铁重剑", 6, null, 3);
-            PlayerState player = new PlayerState(30, 4, 2, weapon);
-            EnemyState enemy = new EnemyState("enemy_wood_demon", "木魈", ElementType.Wood, 48, 6);
-            BattleState state = new BattleState(seed, player, enemy);
+            if (!BattleConfigDatabase.IsLoaded)
+            {
+                throw new InvalidOperationException("Battle config database is not loaded.");
+            }
+
+            BattleDefaultDefinition defaults = BattleConfigDatabase.Default;
+            WeaponDefinition weaponDefinition = BattleConfigDatabase.GetWeapon(defaults.DefaultWeaponId);
+            WeaponState weapon = new WeaponState(
+                weaponDefinition.Id,
+                weaponDefinition.DisplayName,
+                weaponDefinition.BasePower,
+                weaponDefinition.ElementAffinity,
+                weaponDefinition.MaxEnchantSlots);
+
+            PlayerState player = new PlayerState(
+                defaults.PlayerMaxHp,
+                defaults.PlayerMaxEnergy,
+                defaults.EnergyPerTurn,
+                weapon);
+
+            EnemyDefinition enemyDefinition = BattleConfigDatabase.GetEnemy(defaults.DefaultEnemyId);
+            EnemyState enemy = new EnemyState(
+                enemyDefinition.Id,
+                enemyDefinition.DisplayName,
+                enemyDefinition.Element,
+                enemyDefinition.MaxHp,
+                enemyDefinition.BasePower);
+
+            BattleState state = new BattleState(seed >= 0 ? seed : defaults.DefaultSeed, player, enemy);
+            state.DiscardLimit = defaults.DiscardLimit;
+            state.HandLimit = defaults.HandSize;
             BuildDeck(state);
 
             BattleController controller = new BattleController(state);
@@ -170,7 +197,7 @@ namespace BalartroLike.Battle
             State.Player.GainEnergy(State.Player.EnergyPerTurn);
             State.DiscardsRemaining = State.DiscardLimit;
             State.Player.Weapon.TickTurn();
-            DrawCards(6 - State.Hand.Count, State.Events);
+            DrawCards(State.HandLimit - State.Hand.Count, State.Events);
             State.Phase = BattlePhase.PlayerAction;
             State.Events.Add(new BattleEvent(BattleEventType.PlayerTurnStarted, "第 " + State.Turn + " 回合", State.Turn));
         }
@@ -179,7 +206,7 @@ namespace BalartroLike.Battle
         {
             for (int i = 0; i < count; i++)
             {
-                if (State.Hand.Count >= 6)
+                if (State.Hand.Count >= State.HandLimit)
                 {
                     return;
                 }
@@ -246,14 +273,14 @@ namespace BalartroLike.Battle
 
         private static void BuildDeck(BattleState state)
         {
-            int[] ranks = { 1, 1, 2, 3 };
-            int[] qi = { 1, 1, 2, 4 };
             int uid = 1;
-            for (int trigram = 0; trigram < 8; trigram++)
+            IReadOnlyList<DeckEntryDefinition> entries = BattleConfigDatabase.Deck;
+            for (int i = 0; i < entries.Count; i++)
             {
-                for (int copy = 0; copy < ranks.Length; copy++)
+                DeckEntryDefinition entry = entries[i];
+                for (int copy = 0; copy < entry.Count; copy++)
                 {
-                    state.DrawPile.Add(new CardInstance(uid, (TrigramId)trigram, ranks[copy], qi[copy]));
+                    state.DrawPile.Add(new CardInstance(uid, entry.Trigram, entry.Rank, entry.Qi));
                     uid++;
                 }
             }

@@ -113,7 +113,7 @@ namespace BalartroLike.Battle
         {
             for (int i = 0; i < count; i++)
             {
-                if (state.Hand.Count >= 6 || state.DrawPile.Count == 0)
+                if (state.Hand.Count >= state.HandLimit || state.DrawPile.Count == 0)
                 {
                     return;
                 }

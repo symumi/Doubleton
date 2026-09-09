@@ -8,6 +8,7 @@ namespace BalartroLike.Battle
         public int Turn { get; set; }
         public int DiscardsRemaining { get; set; }
         public int DiscardLimit { get; set; }
+        public int HandLimit { get; set; }
         public BattlePhase Phase { get; set; }
         public BattleResultType Result { get; set; }
         public PlayerState Player { get; }
@@ -28,6 +29,7 @@ namespace BalartroLike.Battle
             Events = new List<BattleEvent>();
             DiscardsRemaining = 3;
             DiscardLimit = 3;
+            HandLimit = 6;
             Phase = BattlePhase.BattleStart;
             Result = BattleResultType.None;
         }

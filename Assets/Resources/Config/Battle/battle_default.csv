@@ -1,0 +1,9 @@
+key,value
+playerMaxHp,30
+playerMaxEnergy,4
+energyPerTurn,2
+discardLimit,3
+handSize,6
+defaultWeaponId,weapon_iron_sword
+defaultEnemyId,enemy_wood_demon
+defaultSeed,20260909

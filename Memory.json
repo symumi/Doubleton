@@ -78,5 +78,25 @@
     "时间": "2026-09-09 14:59:39",
     "输入摘要": "要求将项目整个上传到 GitHub 仓库 symumi/Doubleton",
     "输出摘要": "初始化本地 Git 仓库并创建 Unity 标准 .gitignore；提交 89 个项目文件；因直连 github.com 超时，改用 GitHub 官方 Git Data API 上传完整提交树，远端 main 与本地提交 4bb306f 的 tree 完全一致，并校验 89 个 blob 无截断"
+  },
+  {
+    "时间": "2026-09-09 15:33:38",
+    "输入摘要": "Bug：卡牌在反复几次点击后上面的信息消失了",
+    "输出摘要": "定位为原型 UI 每次点击都 Destroy 并重建手牌按钮，旧节点延迟销毁干扰 HorizontalLayoutGroup；改为复用固定按钮和 Text，仅刷新卡牌文字、选中颜色和显隐，并强制重建布局。Roslyn 编译通过，8/8 EditMode 测试通过"
+  },
+  {
+    "时间": "2026-09-09 15:36:49",
+    "输入摘要": "Bug：出了六张牌后还剩一张牌",
+    "输出摘要": "定位为外卦坤对所有组合都配置了 DrawCard(1)，导致每手出卦后自动补一张；改为坤外卦不再抽牌，仅地天泰额外配置抽 1 张 + 回 1 灵力。新增 KunOuter_DoesNotDrawCard 回归测试，Roslyn 编译通过，9/9 EditMode 测试通过"
+  },
+  {
+    "时间": "2026-09-09 15:38:04",
+    "输入摘要": "撤回这次修改，我之前不知道这个规则",
+    "输出摘要": "回退外卦坤抽牌规则改动：恢复坤外卦 DrawCard(1)，地天泰仅保留 GainEnergy(1)，删除 KunOuter_DoesNotDrawCard 测试。Roslyn 编译通过，原有 8/8 EditMode 测试通过"
+  },
+  {
+    "时间": "2026-09-09 15:58:57",
+    "输入摘要": "将配置提取到csv表格中，后续方便配置",
+    "输出摘要": "完成战斗静态配置 CSV 化：trigrams/hexagrams/weapons/enemies/deck/battle_default 六张表，新增 CsvBattleConfigLoader 与 ResourcesBattleConfigLoader，原型启动和 EditMode 测试统一从 Resources 加载；更新配置规范文档；Roslyn 编译通过，8/8 测试通过"
   }
 ]

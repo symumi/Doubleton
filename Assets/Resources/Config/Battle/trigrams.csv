@@ -1,0 +1,9 @@
+id,displayName,symbol,element,yinYang,baseQi,innerDamageMultiplier,innerHitCount,innerEffects,outerDamageMultiplier,outerGuaranteedCritical,outerEffects
+Qian,乾,☰,Metal,Yang,2,15000,1,,20000,false,
+Dui,兑,☱,Metal,Yin,2,10000,1,GainEnergy|Self|Flat|1|None|0|0,9000,false,GainEnergy|Self|Flat|1|None|0|0
+Li,离,☲,Fire,Yang,1,10000,1,ApplyStatus|Enemy|Stacks|2|Burn|2|2,10000,true,
+Zhen,震,☳,Wood,Yang,2,12000,2,,12000,false,
+Xun,巽,☴,Wood,Yin,2,9000,1,ApplyStatus|Enemy|Stacks|1|ArmorBreak|1|2,10000,false,
+Kan,坎,☵,Water,Yang,2,8000,1,ApplyStatus|Enemy|Stacks|1|Chill|1|2,10000,false,ApplyStatus|Enemy|Stacks|1|Chill|1|2
+Gen,艮,☶,Earth,Yang,2,8000,1,GainShield|Self|Flat|3|None|0|0,10000,false,GainShield|Self|Flat|2|None|0|0
+Kun,坤,☷,Earth,Yin,2,8000,1,GainShield|Self|Flat|2|None|0|0,9000,false,DrawCard|Self|Count|1|None|0|0

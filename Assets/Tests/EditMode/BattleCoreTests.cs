@@ -5,6 +5,12 @@ namespace BalartroLike.Tests
 {
     public sealed class BattleCoreTests
     {
+        [OneTimeSetUp]
+        public void LoadBattleConfig()
+        {
+            ResourcesBattleConfigLoader.LoadIfNeeded();
+        }
+
         [Test]
         public void HexagramCatalog_Contains64Combinations()
         {
@@ -91,6 +97,7 @@ namespace BalartroLike.Tests
 
             Assert.IsTrue(status.IsExpired());
         }
+
         [Test]
         public void Controller_EndTurnRunsEnemyIntent()
         {

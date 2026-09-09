@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using BalartroLike.Battle;
 using UnityEngine;
@@ -21,6 +22,9 @@ namespace BalartroLike.Unity
         private Button _endTurnButton;
         private int? _innerUid;
         private int? _outerUid;
+        private readonly List<Button> _cardButtons = new List<Button>();
+        private readonly List<Text> _cardLabels = new List<Text>();
+        private readonly List<int> _cardUids = new List<int>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreate()
@@ -43,6 +47,7 @@ namespace BalartroLike.Unity
             }
 
             _instance = this;
+            ResourcesBattleConfigLoader.LoadIfNeeded();
             BuildUi();
             RestartBattle();
         }
@@ -212,18 +217,15 @@ namespace BalartroLike.Unity
 
         private void RebuildHand()
         {
-            for (int i = _handRoot.childCount - 1; i >= 0; i--)
-            {
-                Destroy(_handRoot.GetChild(i).gameObject);
-            }
-
             for (int i = 0; i < _controller.State.Hand.Count; i++)
             {
+                EnsureCardButton(i);
                 CardInstance card = _controller.State.Hand[i];
-                Button button = CreateButton("Card_" + card.Uid, _handRoot, BuildCardText(card), Vector2.zero, Vector2.one);
-                int uid = card.Uid;
-                button.onClick.AddListener(delegate { OnCardClicked(uid); });
-                Image image = button.GetComponent<Image>();
+                _cardUids[i] = card.Uid;
+                _cardLabels[i].text = BuildCardText(card);
+                _cardButtons[i].gameObject.SetActive(true);
+
+                Image image = _cardButtons[i].GetComponent<Image>();
                 if (_innerUid == card.Uid)
                 {
                     image.color = new Color(0.78f, 0.62f, 0.30f, 1f);
@@ -237,6 +239,28 @@ namespace BalartroLike.Unity
                     image.color = new Color(0.13f, 0.10f, 0.07f, 1f);
                 }
             }
+
+            for (int i = _controller.State.Hand.Count; i < _cardButtons.Count; i++)
+            {
+                _cardButtons[i].gameObject.SetActive(false);
+            }
+
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_handRoot);
+        }
+
+        private void EnsureCardButton(int index)
+        {
+            if (index < _cardButtons.Count)
+            {
+                return;
+            }
+
+            int capturedIndex = _cardButtons.Count;
+            Button button = CreateButton("Card_" + capturedIndex, _handRoot, string.Empty, Vector2.zero, Vector2.one);
+            button.onClick.AddListener(delegate { OnCardClicked(_cardUids[capturedIndex]); });
+            _cardButtons.Add(button);
+            _cardLabels.Add(button.GetComponentInChildren<Text>());
+            _cardUids.Add(0);
         }
 
         private static string BuildCardText(CardInstance card)

@@ -3,3 +3,44 @@ intent_wood_attack,Attack,6,None,0,0,4,0,Always,0,攻击 6
 intent_wood_defend,Defend,4,None,0,0,2,1,Always,0,获得 4 点护盾
 intent_wood_weaken,Debuff,0,Weak,1,1,2,1,Always,0,施加 1 层虚弱
 intent_wood_burst,Attack,9,None,0,0,3,2,HpBelow,50,蓄力重击 9
+intent_fire_lash,Attack,7,None,0,0,4,0,Always,0,焰尾抽击 7
+intent_fire_burn,Debuff,0,Burn,2,2,2,1,Always,0,施加 2 层灼烧
+intent_fire_overheat,Attack,11,None,0,0,3,2,HpBelow,50,燃血扑击 11
+intent_water_lash,Attack,6,None,0,0,4,0,Always,0,寒水冲击 6
+intent_water_chill,Debuff,0,Chill,1,2,2,1,Always,0,施加 1 层寒滞
+intent_water_guard,Defend,5,None,0,0,2,1,Always,0,获得 5 点护盾
+intent_water_surge,Attack,9,None,0,0,3,2,TurnAtLeast,3,寒潮爆发 9
+intent_metal_strike,Attack,7,None,0,0,4,0,Always,0,玄铁重击 7
+intent_metal_guard,Defend,6,None,0,0,3,1,Always,0,获得 6 点护盾
+intent_metal_sunder,Debuff,0,Vulnerable,1,2,2,2,Always,0,施加 1 层易伤
+intent_earth_smash,Attack,5,None,0,0,4,0,Always,0,落石 5
+intent_earth_guard,Defend,8,None,0,0,3,1,Always,0,获得 8 点护盾
+intent_earth_quake,Attack,11,None,0,0,3,2,TurnAtLeast,4,地动 11
+intent_wind_gust,Attack,6,None,0,0,4,0,Always,0,风刃 6
+intent_wind_weaken,Debuff,0,Weak,1,2,2,1,Always,0,施加 1 层虚弱
+intent_wind_gale,Attack,9,None,0,0,2,2,Always,0,罡风 9
+intent_wind_guard,Defend,4,None,0,0,2,1,Always,0,获得 4 点护盾
+intent_thunder_bite,Attack,9,None,0,0,4,0,Always,0,雷牙撕咬 9
+intent_thunder_guard,Defend,5,None,0,0,2,1,Always,0,获得 5 点护盾
+intent_thunder_break,Debuff,0,ArmorBreak,1,2,2,1,Always,0,施加 1 层破甲
+intent_thunder_burst,Attack,14,None,0,0,3,2,HpBelow,40,雷暴扑杀 14
+intent_flame_slash,Attack,10,None,0,0,4,0,Always,0,焚天斩 10
+intent_flame_sear,Debuff,0,Burn,3,2,2,1,Always,0,施加 3 层灼烧
+intent_flame_guard,Defend,7,None,0,0,2,1,Always,0,获得 7 点护盾
+intent_flame_burst,Attack,15,None,0,0,3,2,TurnAtLeast,3,烈焰焚身 15
+intent_frost_bite,Attack,9,None,0,0,4,0,Always,0,冰牙 9
+intent_frost_chill,Debuff,0,Chill,2,2,2,1,Always,0,施加 2 层寒滞
+intent_frost_guard,Defend,8,None,0,0,2,1,Always,0,获得 8 点护盾
+intent_frost_burst,Attack,14,None,0,0,3,2,HpBelow,50,冰封爆裂 14
+intent_boss_qi_strike,Attack,10,None,0,0,4,0,Always,0,镇岳击 10
+intent_boss_qi_guard,Defend,10,None,0,0,3,1,Always,0,获得 10 点护盾
+intent_boss_qi_weaken,Debuff,0,Weak,2,2,2,1,Always,0,施加 2 层虚弱
+intent_boss_qi_seal,Attack,16,None,0,0,3,2,TurnAtLeast,4,封灵重压 16
+intent_boss_core_strike,Attack,13,None,0,0,4,0,Always,0,金丹轰击 13
+intent_boss_core_vulnerable,Debuff,0,Vulnerable,2,2,2,1,Always,0,施加 2 层易伤
+intent_boss_core_guard,Defend,8,None,0,0,2,1,Always,0,获得 8 点护盾
+intent_boss_core_burst,Attack,19,None,0,0,2,2,HpBelow,50,丹火焚天 19
+intent_boss_soul_strike,Attack,16,None,0,0,4,0,Always,0,天魔爪 16
+intent_boss_soul_chill,Debuff,0,Chill,2,2,2,1,Always,0,施加 2 层寒滞
+intent_boss_soul_guard,Defend,12,None,0,0,2,1,Always,0,获得 12 点护盾
+intent_boss_soul_heavenfall,Attack,22,None,0,0,3,2,HpBelow,50,天崩 22

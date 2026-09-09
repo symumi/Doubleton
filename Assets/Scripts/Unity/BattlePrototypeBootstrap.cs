@@ -22,6 +22,8 @@ namespace BalartroLike.Unity
         private Text _statusText;
         private Text _previewText;
         private Text _logText;
+        private BattleFeedbackView _battleFeedbackView;
+        private bool _battleInputLocked;
         private RectTransform _handRoot;
         private RectTransform _talismanRoot;
         private Button _playButton;
@@ -64,6 +66,18 @@ namespace BalartroLike.Unity
         private Text _metaProgressTitleText;
         private Text _metaProgressDetailText;
         private Button _metaProgressRestartButton;
+        private Button _metaProgressPrevButton;
+        private Button _metaProgressNextButton;
+        private RectTransform _codexRoot;
+        private Text _codexTitleText;
+        private Text _codexStatusText;
+        private Text _codexDetailText;
+        private RectTransform _codexGridRoot;
+        private Button _codexBackButton;
+        private Button _mainMenuCodexButton;
+        private HexagramDefinition _selectedHexagram;
+        private readonly List<Button> _codexCellButtons = new List<Button>();
+        private readonly List<Text> _codexCellLabels = new List<Text>();
         private bool _hasRunSave;
         private bool _confirmingNewGame;
         private int? _innerUid;
@@ -109,6 +123,7 @@ namespace BalartroLike.Unity
 
         private void BuildUi()
         {
+            CreateEventSystem();
             GameObject canvasObject = new GameObject("BattlePrototypeCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvasObject.transform.SetParent(transform, false);
 
@@ -119,13 +134,17 @@ namespace BalartroLike.Unity
             scaler.referenceResolution = new Vector2(1920f, 1080f);
             scaler.matchWidthOrHeight = 0.5f;
 
-            CreateEventSystem();
             CreateBackground(canvasObject.transform);
             _statusText = CreateText("Status", canvasObject.transform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, -88f), new Vector2(-80f, 72f), 28, TextAnchor.MiddleCenter);
             _previewText = CreateText("Preview", canvasObject.transform, new Vector2(0.04f, 0.34f), new Vector2(0.72f, 0.86f), Vector2.zero, Vector2.zero, 26, TextAnchor.MiddleLeft);
             _previewText.alignment = TextAnchor.UpperLeft;
             _logText = CreateText("Log", canvasObject.transform, new Vector2(0.74f, 0.30f), new Vector2(0.96f, 0.54f), Vector2.zero, Vector2.zero, 18, TextAnchor.UpperLeft);
             _logText.color = new Color(0.75f, 0.72f, 0.64f, 1f);
+            Text battleFeedbackText = CreateText("BattleFeedback", canvasObject.transform, new Vector2(0.34f, 0.56f), new Vector2(0.66f, 0.72f), Vector2.zero, Vector2.zero, 46, TextAnchor.MiddleCenter);
+            battleFeedbackText.fontStyle = FontStyle.Bold;
+            battleFeedbackText.raycastTarget = false;
+            _battleFeedbackView = battleFeedbackText.gameObject.AddComponent<BattleFeedbackView>();
+            _battleFeedbackView.Initialize();
 
             _handRoot = CreatePanel("Hand", canvasObject.transform, new Vector2(0.04f, 0.04f), new Vector2(0.96f, 0.28f));
             HorizontalLayoutGroup layout = _handRoot.gameObject.AddComponent<HorizontalLayoutGroup>();
@@ -150,6 +169,7 @@ namespace BalartroLike.Unity
             BuildRealmPromotionUi(canvasObject.transform);
             BuildRunResultUi(canvasObject.transform);
             BuildMetaProgressUi(canvasObject.transform);
+            BuildCodexUi(canvasObject.transform);
             BuildMainMenuUi(canvasObject.transform);
         }
 
@@ -223,7 +243,7 @@ namespace BalartroLike.Unity
             layout.spacing = 14f;
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = true;
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 4; i++)
             {
                 int capturedIndex = i;
                 Button button = CreateButton("ShopOffer_" + i, offerRoot, string.Empty, Vector2.zero, Vector2.one);
@@ -295,9 +315,203 @@ namespace BalartroLike.Unity
             _metaProgressRoot.GetComponent<Image>().color = new Color(0.055f, 0.045f, 0.035f, 1f);
             _metaProgressTitleText = CreateText("MetaProgressTitle", _metaProgressRoot, new Vector2(0.12f, 0.66f), new Vector2(0.88f, 0.84f), Vector2.zero, Vector2.zero, 48, TextAnchor.MiddleCenter);
             _metaProgressDetailText = CreateText("MetaProgressDetail", _metaProgressRoot, new Vector2(0.20f, 0.30f), new Vector2(0.80f, 0.64f), Vector2.zero, Vector2.zero, 28, TextAnchor.MiddleCenter);
+            _metaProgressPrevButton = CreateButton("MetaProgressPrev", _metaProgressRoot, "上一档", new Vector2(0.20f, 0.17f), new Vector2(0.34f, 0.27f));
             _metaProgressRestartButton = CreateButton("MetaProgressRestart", _metaProgressRoot, "重新开始", new Vector2(0.38f, 0.17f), new Vector2(0.62f, 0.27f));
+            _metaProgressNextButton = CreateButton("MetaProgressNext", _metaProgressRoot, "下一档", new Vector2(0.66f, 0.17f), new Vector2(0.80f, 0.27f));
+            _metaProgressPrevButton.onClick.AddListener(OnMetaProgressPrevClicked);
             _metaProgressRestartButton.onClick.AddListener(OnMetaProgressRestartClicked);
+            _metaProgressNextButton.onClick.AddListener(OnMetaProgressNextClicked);
             _metaProgressRoot.gameObject.SetActive(false);
+        }
+
+        private void BuildCodexUi(Transform parent)
+        {
+            _codexRoot = CreatePanel("Codex", parent, Vector2.zero, Vector2.one);
+            _codexRoot.GetComponent<Image>().color = new Color(0.055f, 0.045f, 0.035f, 1f);
+            _codexTitleText = CreateText("CodexTitle", _codexRoot, new Vector2(0.04f, 0.88f), new Vector2(0.66f, 0.97f), Vector2.zero, Vector2.zero, 42, TextAnchor.MiddleLeft);
+            _codexTitleText.text = "卦象图鉴";
+            _codexStatusText = CreateText("CodexStatus", _codexRoot, new Vector2(0.04f, 0.80f), new Vector2(0.66f, 0.88f), Vector2.zero, Vector2.zero, 22, TextAnchor.MiddleLeft);
+            _codexStatusText.color = new Color(0.75f, 0.72f, 0.64f, 1f);
+
+            _codexGridRoot = CreatePanel("CodexGrid", _codexRoot, new Vector2(0.04f, 0.08f), new Vector2(0.66f, 0.79f));
+            GridLayoutGroup layout = _codexGridRoot.gameObject.AddComponent<GridLayoutGroup>();
+            layout.cellSize = new Vector2(126f, 78f);
+            layout.spacing = new Vector2(5f, 5f);
+            layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            layout.constraintCount = 8;
+            layout.childAlignment = TextAnchor.UpperLeft;
+
+            for (int i = 0; i < 64; i++)
+            {
+                int index = i;
+                Button button = CreateButton("CodexCell_" + i, _codexGridRoot, string.Empty, Vector2.zero, Vector2.zero);
+                button.GetComponent<RectTransform>().sizeDelta = layout.cellSize;
+                button.onClick.AddListener(() => OnCodexCellClicked(index));
+                Text label = button.GetComponentInChildren<Text>();
+                label.fontSize = 16;
+                label.resizeTextForBestFit = true;
+                label.resizeTextMinSize = 10;
+                label.resizeTextMaxSize = 16;
+                _codexCellButtons.Add(button);
+                _codexCellLabels.Add(label);
+            }
+
+            _codexDetailText = CreateText("CodexDetail", _codexRoot, new Vector2(0.70f, 0.08f), new Vector2(0.96f, 0.79f), Vector2.zero, Vector2.zero, 19, TextAnchor.UpperLeft);
+            _codexDetailText.color = new Color(0.93f, 0.89f, 0.81f, 1f);
+            _codexBackButton = CreateButton("CodexBack", _codexRoot, "返回主界面", new Vector2(0.77f, 0.02f), new Vector2(0.93f, 0.075f));
+            _codexBackButton.onClick.AddListener(OnCodexBackClicked);
+            _codexRoot.gameObject.SetActive(false);
+        }
+
+        private void OnMainMenuCodexClicked()
+        {
+            HideAllRoots();
+            _codexRoot.gameObject.SetActive(true);
+            _selectedHexagram = null;
+            RefreshCodex();
+        }
+
+        private void OnCodexBackClicked()
+        {
+            ShowMainMenu();
+        }
+
+        private void OnCodexCellClicked(int index)
+        {
+            TrigramId outer = (TrigramId)(index / 8);
+            TrigramId inner = (TrigramId)(index % 8);
+            _selectedHexagram = HexagramCatalog.Get(outer, inner);
+            RefreshCodexDetail();
+        }
+
+        private void RefreshCodex()
+        {
+            SetBattleVisible(false);
+            _mainMenuRoot.gameObject.SetActive(false);
+            _codexRoot.gameObject.SetActive(true);
+
+            int discovered = 0;
+            int mastered = 0;
+            for (int i = 0; i < _codexCellButtons.Count; i++)
+            {
+                HexagramDefinition hexagram = HexagramCatalog.Get((TrigramId)(i / 8), (TrigramId)(i % 8));
+                int useCount = _metaProgress.HexagramUses.TryGetValue(hexagram.Id, out int count) ? count : 0;
+                bool known = useCount > 0;
+                if (known)
+                {
+                    discovered++;
+                }
+
+                if (HexagramMastery.IsMastered(useCount))
+                {
+                    mastered++;
+                }
+
+                _codexCellLabels[i].text = known
+                    ? hexagram.DisplayName + "\n" + BuildMasteryText(useCount)
+                    : "？？？\n○ ○ ○ ○ ○";
+                Image image = _codexCellButtons[i].GetComponent<Image>();
+                image.color = known
+                    ? hexagram.IsSpecial
+                        ? new Color(0.30f, 0.20f, 0.10f, 1f)
+                        : new Color(0.13f, 0.16f, 0.13f, 1f)
+                    : new Color(0.09f, 0.08f, 0.07f, 1f);
+                _codexCellLabels[i].color = known
+                    ? new Color(0.93f, 0.89f, 0.81f, 1f)
+                    : new Color(0.42f, 0.40f, 0.36f, 1f);
+            }
+
+            _codexStatusText.text = "已发现 " + discovered + "/64   精通 " + mastered + "   点击卦格查看详情";
+            RefreshCodexDetail();
+        }
+
+        private void RefreshCodexDetail()
+        {
+            if (_selectedHexagram == null)
+            {
+                _codexDetailText.text = "点击左侧卦格查看卦象详情。\n\n已发现的卦会显示效果、五行与熟练度。";
+                return;
+            }
+
+            int useCount = _metaProgress.HexagramUses.TryGetValue(_selectedHexagram.Id, out int count) ? count : 0;
+            if (useCount == 0)
+            {
+                _codexDetailText.text = "？？？\n\n尚未参悟此卦。\n使用对应内外卦组合后可解锁图鉴。";
+                return;
+            }
+
+            TrigramDefinition inner = TrigramCatalog.Get(_selectedHexagram.Inner);
+            TrigramDefinition outer = TrigramCatalog.Get(_selectedHexagram.Outer);
+            _codexDetailText.text = _selectedHexagram.DisplayName + "  " + _selectedHexagram.Id
+                + "\n上卦 " + outer.DisplayName + " " + outer.Symbol
+                + " / 下卦 " + inner.DisplayName + " " + inner.Symbol
+                + "\n五行 " + GetElementDisplayName(inner.Element)
+                + "\n类型 " + (_selectedHexagram.IsSpecial ? "特殊卦" : "模板卦")
+                + "\n熟练度 " + HexagramMastery.GetLevel(useCount) + "/5"
+                + (HexagramMastery.IsMastered(useCount) ? " · 精通伤害 ×1.20" : string.Empty)
+                + "\n使用次数 " + useCount
+                + "\n\n" + BuildHexagramDescription(_selectedHexagram)
+                + "\n\n" + BuildHexagramEffectText(_selectedHexagram);
+        }
+
+        private static string BuildMasteryText(int useCount)
+        {
+            int level = HexagramMastery.GetLevel(useCount);
+            StringBuilder builder = new StringBuilder();
+            for (int i = 1; i <= HexagramMastery.MasteredLevel; i++)
+            {
+                if (i > 1)
+                {
+                    builder.Append(' ');
+                }
+
+                builder.Append(level >= i ? '●' : '○');
+            }
+
+            return builder.ToString();
+        }
+
+        private static string BuildHexagramDescription(HexagramDefinition hexagram)
+        {
+            if (!string.IsNullOrWhiteSpace(hexagram.Description))
+            {
+                return hexagram.Description;
+            }
+
+            return "内卦行为：" + TrigramCatalog.Get(hexagram.Inner).DisplayName
+                + "；外卦修饰：" + TrigramCatalog.Get(hexagram.Outer).DisplayName;
+        }
+
+        private static string BuildHexagramEffectText(HexagramDefinition hexagram)
+        {
+            StringBuilder builder = new StringBuilder("效果：");
+            if (hexagram.DamageMultiplierOverride.HasValue)
+            {
+                builder.Append("卦倍率 ×").Append((hexagram.DamageMultiplierOverride.Value / 10000f).ToString("0.00")).Append("；");
+            }
+
+            if (hexagram.GuaranteedCriticalOverride == true)
+            {
+                builder.Append("必定会心；");
+            }
+
+            if (hexagram.AdditionalEffects.Length == 0)
+            {
+                builder.Append("沿用内卦与外卦模板。");
+                return builder.ToString();
+            }
+
+            for (int i = 0; i < hexagram.AdditionalEffects.Length; i++)
+            {
+                if (i > 0)
+                {
+                    builder.Append("；");
+                }
+
+                builder.Append(GetEffectDisplayName(hexagram.AdditionalEffects[i]));
+            }
+
+            return builder.ToString();
         }
 
         private void BuildMainMenuUi(Transform parent)
@@ -306,13 +520,16 @@ namespace BalartroLike.Unity
             _mainMenuRoot.GetComponent<Image>().color = new Color(0.055f, 0.045f, 0.035f, 1f);
             _mainMenuTitleText = CreateText("MainMenuTitle", _mainMenuRoot, new Vector2(0.18f, 0.68f), new Vector2(0.82f, 0.84f), Vector2.zero, Vector2.zero, 58, TextAnchor.MiddleCenter);
             _mainMenuTitleText.text = "卦锻 · 修行历劫";
-            _mainMenuStatusText = CreateText("MainMenuStatus", _mainMenuRoot, new Vector2(0.18f, 0.56f), new Vector2(0.82f, 0.68f), Vector2.zero, Vector2.zero, 24, TextAnchor.MiddleCenter);
+            _mainMenuStatusText = CreateText("MainMenuStatus", _mainMenuRoot, new Vector2(0.18f, 0.57f), new Vector2(0.82f, 0.67f), Vector2.zero, Vector2.zero, 24, TextAnchor.MiddleCenter);
             _mainMenuStatusText.color = new Color(0.75f, 0.72f, 0.64f, 1f);
-            _continueGameButton = CreateButton("ContinueGame", _mainMenuRoot, "继续游戏", new Vector2(0.34f, 0.43f), new Vector2(0.66f, 0.53f));
+            _continueGameButton = CreateButton("ContinueGame", _mainMenuRoot, "继续游戏", new Vector2(0.34f, 0.45f), new Vector2(0.66f, 0.54f));
             _continueGameButton.onClick.AddListener(OnContinueGameClicked);
-            _newGameButton = CreateButton("NewGame", _mainMenuRoot, "开始修行", new Vector2(0.34f, 0.29f), new Vector2(0.66f, 0.39f));
+            _newGameButton = CreateButton("NewGame", _mainMenuRoot, "开始修行", new Vector2(0.34f, 0.33f), new Vector2(0.66f, 0.42f));
             _newGameButton.onClick.AddListener(OnNewGameClicked);
+            _mainMenuCodexButton = CreateButton("Codex", _mainMenuRoot, "卦象图鉴", new Vector2(0.34f, 0.21f), new Vector2(0.66f, 0.30f));
+            _mainMenuCodexButton.onClick.AddListener(OnMainMenuCodexClicked);
             _mainMenuRoot.gameObject.SetActive(false);
+            _codexRoot.gameObject.SetActive(false);
         }
         private static void CreateEventSystem()
         {
@@ -347,13 +564,14 @@ namespace BalartroLike.Unity
             _outerUid = null;
             _confirmingNewGame = false;
             _hasRunSave = false;
+            _selectedHexagram = null;
             _newGameButton.GetComponentInChildren<Text>().text = "开始修行";
 
             bool hasSaveFile = File.Exists(SavePath) || File.Exists(SavePath + ".bak");
             if (!hasSaveFile)
             {
                 _continueGameButton.gameObject.SetActive(false);
-                _mainMenuStatusText.text = "尚无修行记录，开始新的历劫。";
+                _mainMenuStatusText.text = "尚无修行记录，开始新的历劫。\n当前天劫 " + _metaProgress.SelectedHeavenTribulation + " / 最高 " + _metaProgress.HighestHeavenTribulation;
                 return;
             }
 
@@ -368,7 +586,8 @@ namespace BalartroLike.Unity
             _hasRunSave = data.run != null;
             _continueGameButton.gameObject.SetActive(_hasRunSave);
             _newGameButton.GetComponentInChildren<Text>().text = _hasRunSave ? "开始新游戏" : "开始修行";
-            _mainMenuStatusText.text = _hasRunSave ? "检测到未完成的修行进度。" : "尚无进行中的修行。";
+            _mainMenuStatusText.text = (_hasRunSave ? "检测到未完成的修行进度。" : "尚无进行中的修行。")
+                + "\n当前天劫 " + _metaProgress.SelectedHeavenTribulation + " / 最高 " + _metaProgress.HighestHeavenTribulation;
         }
 
         private void ApplyMetaToRuntime(MetaSaveData meta)
@@ -380,7 +599,20 @@ namespace BalartroLike.Unity
 
             _metaProgress.DaoHeart = meta.dao_heart;
             _metaProgress.HighestHeavenTribulation = meta.highest_heaven_tribulation;
+            _metaProgress.SelectedHeavenTribulation = meta.selected_heaven_tribulation;
             _metaProgress.CompletedRunCount = meta.completed_run_count;
+            _metaProgress.HexagramUses.Clear();
+            if (meta.hexagram_uses != null)
+            {
+                for (int i = 0; i < meta.hexagram_uses.Count; i++)
+                {
+                    HexagramUseSaveData entry = meta.hexagram_uses[i];
+                    if (!string.IsNullOrEmpty(entry.hexagram_id) && entry.use_count > 0)
+                    {
+                        _metaProgress.HexagramUses[entry.hexagram_id] = entry.use_count;
+                    }
+                }
+            }
         }
 
         private void OnContinueGameClicked()
@@ -391,7 +623,7 @@ namespace BalartroLike.Unity
                 return;
             }
 
-            if (!SaveService.TryRestore(data, out RunController run, out BattleController battle, out RunMetaProgressState meta, out string restoreError))
+            if (!SaveService.TryRestore(data, out RunController run, out BattleController battle, out _, out string restoreError))
             {
                 _mainMenuStatusText.text = "继续失败：" + restoreError;
                 return;
@@ -405,9 +637,7 @@ namespace BalartroLike.Unity
 
             _runController = run;
             _controller = battle;
-            _metaProgress.DaoHeart = meta.DaoHeart;
-            _metaProgress.HighestHeavenTribulation = meta.HighestHeavenTribulation;
-            _metaProgress.CompletedRunCount = meta.CompletedRunCount;
+            ApplyMetaToRuntime(data.meta);
             _innerUid = null;
             _outerUid = null;
             Refresh();
@@ -441,14 +671,26 @@ namespace BalartroLike.Unity
 
         private void SaveMetaProgress()
         {
-            if (!SaveService.TrySaveMeta(SavePath, _metaProgress, out string error))
+            RunMetaProgressState meta = _runController.MetaProgress;
+            if (!SaveService.TrySaveMeta(SavePath, meta, out string error))
             {
                 Debug.LogWarning("保存失败：" + error);
+            }
+
+            _metaProgress.DaoHeart = meta.DaoHeart;
+            _metaProgress.HighestHeavenTribulation = meta.HighestHeavenTribulation;
+            _metaProgress.SelectedHeavenTribulation = meta.SelectedHeavenTribulation;
+            _metaProgress.CompletedRunCount = meta.CompletedRunCount;
+            _metaProgress.HexagramUses.Clear();
+            foreach (KeyValuePair<string, int> entry in meta.HexagramUses)
+            {
+                _metaProgress.HexagramUses[entry.Key] = entry.Value;
             }
         }
 
         private void HideAllRoots()
         {
+            HideBattleFeedback();
             SetBattleVisible(false);
             _routeRoot.gameObject.SetActive(false);
             _battleResultRoot.gameObject.SetActive(false);
@@ -458,9 +700,11 @@ namespace BalartroLike.Unity
             _runResultRoot.gameObject.SetActive(false);
             _metaProgressRoot.gameObject.SetActive(false);
             _mainMenuRoot.gameObject.SetActive(false);
+            _codexRoot.gameObject.SetActive(false);
         }
         private void RestartRun()
         {
+            HideBattleFeedback();
             _runController = RunController.CreatePrototype(Environment.TickCount, _metaProgress);
             _controller = null;
             _innerUid = null;
@@ -515,6 +759,11 @@ namespace BalartroLike.Unity
 
         private void OnCardClicked(int cardUid)
         {
+            if (_battleInputLocked)
+            {
+                return;
+            }
+
             if (_innerUid == null)
             {
                 _innerUid = cardUid;
@@ -534,19 +783,38 @@ namespace BalartroLike.Unity
 
         private void OnPlayClicked()
         {
-            if (_innerUid == null || _outerUid == null)
+            if (_battleInputLocked || _innerUid == null || _outerUid == null)
             {
                 return;
             }
 
+            BattleState state = _controller.State;
+            int enemyHpBefore = state.Enemy.Hp;
+            int enemyShieldBefore = state.Enemy.Shield;
             BattleCommandResult result = _controller.PlayHexagram(_innerUid.Value, _outerUid.Value);
             if (!result.Success)
             {
                 Debug.LogWarning(result.Error);
+                ShowBattleFeedback(result.Error, new Color(0.95f, 0.45f, 0.35f, 1f));
             }
-            else if (_controller.State.Phase == BattlePhase.BattleEnd)
+            else
             {
-                SaveCurrentProgress();
+                int hpDamage = Math.Max(0, enemyHpBefore - state.Enemy.Hp);
+                int shieldDamage = Math.Max(0, enemyShieldBefore - state.Enemy.Shield);
+                string feedback = result.Calculation.Hexagram.DisplayName + "\n-" + hpDamage;
+                if (shieldDamage > 0)
+                {
+                    feedback += "\n护盾 -" + shieldDamage;
+                }
+
+                Color color = state.Result == BattleResultType.Victory
+                    ? new Color(1f, 0.72f, 0.28f, 1f)
+                    : new Color(1f, 0.88f, 0.55f, 1f);
+                ShowBattleFeedback(feedback, color);
+                if (state.Phase == BattlePhase.BattleEnd)
+                {
+                    SaveCurrentProgress();
+                }
             }
 
             _innerUid = null;
@@ -556,14 +824,25 @@ namespace BalartroLike.Unity
 
         private void OnTalismanClicked(int index)
         {
+            if (_battleInputLocked || index < 0 || index >= _controller.State.Talismans.Count)
+            {
+                return;
+            }
+
+            string talismanName = _controller.State.Talismans[index].DisplayName;
             RunCommandResult result = _runController.UseTalisman(_controller, index);
             if (!result.Success)
             {
                 Debug.LogWarning(result.Error);
+                ShowBattleFeedback(result.Error, new Color(0.95f, 0.45f, 0.35f, 1f));
             }
-            else if (_controller.State.Phase == BattlePhase.BattleEnd)
+            else
             {
-                SaveCurrentProgress();
+                ShowBattleFeedback("符箓\n" + talismanName, new Color(0.45f, 0.85f, 0.85f, 1f));
+                if (_controller.State.Phase == BattlePhase.BattleEnd)
+                {
+                    SaveCurrentProgress();
+                }
             }
 
             Refresh();
@@ -571,16 +850,92 @@ namespace BalartroLike.Unity
 
         private void OnEndTurnClicked()
         {
+            if (_battleInputLocked)
+            {
+                return;
+            }
+
+            BattleState state = _controller.State;
+            int playerHpBefore = state.Player.Hp;
+            int playerShieldBefore = state.Player.Shield;
+            int enemyHpBefore = state.Enemy.Hp;
             BattleCommandResult result = _controller.EndTurn();
             if (!result.Success)
             {
                 Debug.LogWarning(result.Error);
+                ShowBattleFeedback(result.Error, new Color(0.95f, 0.45f, 0.35f, 1f));
+            }
+            else
+            {
+                int playerDamage = Math.Max(0, playerHpBefore - state.Player.Hp);
+                int playerShieldDamage = Math.Max(0, playerShieldBefore - state.Player.Shield);
+                int enemyDamage = Math.Max(0, enemyHpBefore - state.Enemy.Hp);
+                string feedback = "回合结算";
+                if (enemyDamage > 0)
+                {
+                    feedback += "\n敌方 -" + enemyDamage;
+                }
+
+                if (playerDamage > 0)
+                {
+                    feedback += "\n玩家 -" + playerDamage;
+                }
+
+                if (playerShieldDamage > 0)
+                {
+                    feedback += "\n护盾 -" + playerShieldDamage;
+                }
+
+                Color color = playerDamage > 0
+                    ? new Color(0.95f, 0.45f, 0.35f, 1f)
+                    : new Color(0.95f, 0.78f, 0.45f, 1f);
+                ShowBattleFeedback(feedback, color);
             }
 
             _innerUid = null;
             _outerUid = null;
             SaveCurrentProgress();
             Refresh();
+        }
+
+        private void ShowBattleFeedback(string message, Color color)
+        {
+            _battleInputLocked = true;
+            RefreshBattleInputState();
+            _battleFeedbackView.Play(message, color, OnBattleFeedbackComplete);
+        }
+
+        private void OnBattleFeedbackComplete()
+        {
+            _battleInputLocked = false;
+            RefreshBattleInputState();
+        }
+
+        private void HideBattleFeedback()
+        {
+            _battleFeedbackView.Hide();
+            _battleInputLocked = false;
+        }
+
+        private void RefreshBattleInputState()
+        {
+            if (_controller == null)
+            {
+                return;
+            }
+
+            bool playerCanAct = CanPlayerAct();
+            _playButton.interactable = playerCanAct && _innerUid != null && _outerUid != null;
+            _endTurnButton.interactable = playerCanAct;
+            for (int i = 0; i < _cardButtons.Count; i++)
+            {
+                _cardButtons[i].interactable = playerCanAct;
+            }
+
+            for (int i = 0; i < _talismanButtons.Count; i++)
+            {
+                _talismanButtons[i].interactable = playerCanAct;
+            }
         }
 
         private void OnRestartClicked()
@@ -649,6 +1004,31 @@ namespace BalartroLike.Unity
         private void OnMetaProgressRestartClicked()
         {
             RestartRun();
+        }
+
+        private void OnMetaProgressPrevClicked()
+        {
+            ChangeSelectedTribulation(-1);
+        }
+
+        private void OnMetaProgressNextClicked()
+        {
+            ChangeSelectedTribulation(1);
+        }
+
+        private void ChangeSelectedTribulation(int delta)
+        {
+            RunMetaProgressState meta = _runController.MetaProgress;
+            int maxLevel = Math.Min(meta.HighestHeavenTribulation, RunConfigDatabase.MaxTribulationLevel);
+            int nextLevel = Math.Max(0, Math.Min(meta.SelectedHeavenTribulation + delta, maxLevel));
+            if (nextLevel == meta.SelectedHeavenTribulation)
+            {
+                return;
+            }
+
+            meta.SelectedHeavenTribulation = nextLevel;
+            SaveMetaProgress();
+            Refresh();
         }
 
         private void OnShopOfferClicked(int index)
@@ -801,8 +1181,9 @@ namespace BalartroLike.Unity
                 + "   护盾 " + state.Enemy.Shield + "   意图 " + (state.Enemy.CurrentIntent == null ? "未知" : state.Enemy.CurrentIntent.DisplayText);
             _previewText.text = BuildPreviewText();
             _logText.text = BuildLogText();
-            _playButton.interactable = _innerUid != null && _outerUid != null && state.Phase == BattlePhase.PlayerAction;
-            _endTurnButton.interactable = state.Phase == BattlePhase.PlayerAction;
+            bool playerCanAct = CanPlayerAct();
+            _playButton.interactable = _innerUid != null && _outerUid != null && playerCanAct;
+            _endTurnButton.interactable = playerCanAct;
             _continueButton.interactable = state.Phase == BattlePhase.BattleEnd;
             RebuildHand();
             RebuildTalismans();
@@ -855,8 +1236,9 @@ namespace BalartroLike.Unity
                 string offerId = state.ActiveShopOfferIds[i];
                 RunEncounterDatabase.TryGetShopOffer(offerId, out RunShopOfferDefinition offer);
                 bool purchased = state.PurchasedShopOfferIds.Contains(offerId);
-                _shopOfferLabels[i].text = offer.DisplayName + "\n" + offer.Description + "\n价格 " + offer.Price + " 灵石";
-                _shopOfferButtons[i].interactable = !purchased && state.SpiritStones >= offer.Price;
+                int price = _runController.GetShopPrice(offer);
+                _shopOfferLabels[i].text = offer.DisplayName + "\n" + offer.Description + "\n价格 " + price + " 灵石";
+                _shopOfferButtons[i].interactable = !purchased && state.SpiritStones >= price;
                 _shopOfferLabels[i].text += purchased ? "\n已购买" : string.Empty;
             }
 
@@ -946,11 +1328,27 @@ namespace BalartroLike.Unity
             _metaProgressRoot.gameObject.SetActive(true);
 
             RunMetaProgressState meta = _runController.MetaProgress;
+            int discovered = 0;
+            int mastered = 0;
+            foreach (KeyValuePair<string, int> entry in meta.HexagramUses)
+            {
+                discovered++;
+                if (HexagramMastery.IsMastered(entry.Value))
+                {
+                    mastered++;
+                }
+            }
+
+            HeavenTribulationDefinition tribulation = RunConfigDatabase.GetTribulation(meta.SelectedHeavenTribulation);
             _metaProgressTitleText.text = "局外成长";
             _metaProgressDetailText.text = "累计道行 " + meta.DaoHeart
                 + "\n完成修行 " + meta.CompletedRunCount + " 次"
-                + "\n最高天劫 " + meta.HighestHeavenTribulation
-                + "\n\n道行解锁与天劫词条将在后续接入。";
+                + "\n当前天劫 " + tribulation.DisplayName + "   最高 " + meta.HighestHeavenTribulation
+                + "\n" + tribulation.Description
+                + "\n图鉴发现 " + discovered + "/64   精通 " + mastered
+                + "\n\n道行解锁商店与天劫 4+ 词条将在后续接入。";
+            _metaProgressPrevButton.interactable = meta.SelectedHeavenTribulation > 0;
+            _metaProgressNextButton.interactable = meta.SelectedHeavenTribulation < Math.Min(meta.HighestHeavenTribulation, RunConfigDatabase.MaxTribulationLevel);
         }
 
         private void RefreshRoute()
@@ -968,11 +1366,11 @@ namespace BalartroLike.Unity
             RunNodeDefinition node = _runController.CurrentNode;
             _routeTitleText.text = "修行历劫";
             _routeStatusText.text = "进度 " + (state.CurrentNodeIndex + 1) + "/" + _runController.NodeCount
-                + "   累计灵石 " + state.SpiritStones;
+                + "   累计灵石 " + state.SpiritStones + "   天劫 " + state.HeavenTribulationLevel;
             _routeDetailText.text = "当前节点\n" + node.DisplayName
                 + "\n\n境界  " + GetRealmDisplayName(node.RealmId)
                 + "\n类型  " + GetNodeTypeDisplayName(node.Type)
-                + "\n敌人  " + node.EnemyId
+                + "\n敌人  " + BattleConfigDatabase.GetEnemy(node.SelectEnemyId(state.Seed + state.CurrentNodeIndex)).DisplayName
                 + "\n奖励  灵石 +" + node.RewardSpiritStones
                 + "\n武器  " + BattleConfigDatabase.GetWeapon(state.WeaponId).DisplayName;
             _weaponButton.GetComponentInChildren<Text>().text = "切换武器：" + BattleConfigDatabase.GetWeapon(state.WeaponId).DisplayName;
@@ -1034,6 +1432,23 @@ namespace BalartroLike.Unity
             }
         }
 
+        private static string GetElementDisplayName(ElementType element)
+        {
+            switch (element)
+            {
+                case ElementType.Metal:
+                    return "金";
+                case ElementType.Wood:
+                    return "木";
+                case ElementType.Water:
+                    return "水";
+                case ElementType.Fire:
+                    return "火";
+                default:
+                    return "土";
+            }
+        }
+
         private static string GetAttackPatternDisplayName(AttackPattern pattern)
         {
             switch (pattern)
@@ -1085,9 +1500,12 @@ namespace BalartroLike.Unity
                 + " / 下卦 " + TrigramCatalog.Get(calculation.Hexagram.Inner).DisplayName
                 + "\n模式 " + GetAttackPatternDisplayName(calculation.AttackPattern)
                 + "   每段 " + calculation.Damage.FinalDamage + "   连击 " + calculation.HitCount + " 段"
+                + "\n熟练度 " + HexagramMastery.GetLevel(_controller.State.GetHexagramUseCount(calculation.Hexagram.Id)) + "/5"
+                + (calculation.Damage.MasteryMultiplier > 10000 ? "   精通加成 ×1.20" : string.Empty)
                 + "\n" + calculation.Damage.ToFormula()
                 + stateText
-                + BuildEnchantWarning(calculation);
+                + BuildEnchantWarning(calculation)
+                + BuildKillHint(calculation);
         }
 
         private string BuildArtifactText()
@@ -1157,6 +1575,20 @@ namespace BalartroLike.Unity
             return string.Empty;
         }
 
+        private string BuildKillHint(BattleCalculation calculation)
+        {
+            return calculation.CanDefeat(_controller.State.Enemy)
+                ? "\n斩杀提示：本次出卦可击杀"
+                : string.Empty;
+        }
+
+        private bool CanPlayerAct()
+        {
+            return _controller != null
+                && _controller.State.Phase == BattlePhase.PlayerAction
+                && !_battleInputLocked;
+        }
+
         private static string GetEffectDisplayName(EffectOperation effect)
         {
             switch (effect.Type)
@@ -1216,6 +1648,7 @@ namespace BalartroLike.Unity
                 _cardUids[i] = card.Uid;
                 _cardLabels[i].text = BuildCardText(card);
                 _cardButtons[i].gameObject.SetActive(true);
+                _cardButtons[i].interactable = CanPlayerAct();
 
                 Image image = _cardButtons[i].GetComponent<Image>();
                 if (_innerUid == card.Uid)
@@ -1247,7 +1680,7 @@ namespace BalartroLike.Unity
                 EnsureTalismanButton(i);
                 TalismanDefinition talisman = _controller.State.Talismans[i];
                 _talismanLabels[i].text = talisman.DisplayName + "  " + GetTalismanEffectText(talisman);
-                _talismanButtons[i].interactable = _controller.State.Phase == BattlePhase.PlayerAction;
+                _talismanButtons[i].interactable = CanPlayerAct();
                 _talismanButtons[i].gameObject.SetActive(true);
             }
 

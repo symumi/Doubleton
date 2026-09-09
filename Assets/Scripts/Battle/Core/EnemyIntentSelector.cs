@@ -16,13 +16,17 @@ namespace BalartroLike.Battle
                 ? SelectWeighted(enemy, turn, random)
                 : SelectSequence(enemy, turn);
             enemy.RecordIntentSelected(definition, turn);
+            int power = definition.Type == EnemyIntentType.Attack ? definition.Power + enemy.PowerBonus : definition.Power;
+            string displayText = definition.Type == EnemyIntentType.Attack && enemy.PowerBonus > 0
+                ? definition.DisplayText + "（+" + enemy.PowerBonus + "）"
+                : definition.DisplayText;
             return new EnemyIntent(
                 definition.Type,
-                definition.Power,
+                power,
                 definition.Status,
                 definition.StatusStacks,
                 definition.StatusDuration,
-                definition.DisplayText,
+                displayText,
                 definition.Id);
         }
 

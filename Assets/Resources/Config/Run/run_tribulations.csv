@@ -1,0 +1,5 @@
+level,displayName,enemyHpPercent,enemyPowerBonus,shopPricePercent,description
+0,天劫 0,100,0,100,基础难度，无额外词条
+1,天劫 1,120,0,100,敌人 HP +20%
+2,天劫 2,120,0,120,敌人 HP +20%，坊市价格 +20%
+3,天劫 3,140,2,120,敌人 HP +40%、攻击 +2，坊市价格 +20%

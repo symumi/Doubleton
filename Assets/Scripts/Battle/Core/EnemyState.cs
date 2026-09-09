@@ -14,6 +14,7 @@ namespace BalartroLike.Battle
         public int Hp { get; private set; }
         public int Shield { get; private set; }
         public int BasePower { get; }
+        public int PowerBonus { get; }
         public EnemyIntentMode IntentMode { get; }
         public IReadOnlyList<EnemyIntentDefinition> Intents { get; }
         public EnemyRuleType RuleType { get; }
@@ -30,7 +31,8 @@ namespace BalartroLike.Battle
             EnemyKind kind = EnemyKind.Normal,
             EnemyIntentMode intentMode = EnemyIntentMode.Sequence,
             IReadOnlyList<EnemyIntentDefinition> intents = null,
-            EnemyRuleType ruleType = EnemyRuleType.None)
+            EnemyRuleType ruleType = EnemyRuleType.None,
+            int powerBonus = 0)
         {
             Id = id;
             DisplayName = displayName;
@@ -39,6 +41,7 @@ namespace BalartroLike.Battle
             MaxHp = maxHp;
             Hp = maxHp;
             BasePower = basePower;
+            PowerBonus = powerBonus;
             IntentMode = intentMode;
             Intents = intents ?? new EnemyIntentDefinition[0];
             RuleType = ruleType;

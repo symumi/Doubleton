@@ -18,6 +18,7 @@ namespace BalartroLike.Battle
             int weaponAffinityMultiplier = GetWeaponAffinityMultiplier(state.Player.Weapon, inner);
             int hexagramMultiplier = hexagram.DamageMultiplierOverride
                 ?? Multiply(inner.InnerDamageMultiplier, outer.OuterDamageMultiplier);
+            int masteryMultiplier = HexagramMastery.GetDamageMultiplier(state.GetHexagramUseCount(hexagram.Id));
             int elementMultiplier = ElementRules.GetDamageMultiplier(inner.Element, state.Enemy.Element);
             ArtifactRules.CollectDamageModifiers(
                 state,
@@ -31,6 +32,7 @@ namespace BalartroLike.Battle
             int baseDamage = state.Player.Weapon.BasePower + innerCard.Qi + outerCard.Qi;
             int rawDamage = ApplyMultiplier(baseDamage, weaponAffinityMultiplier);
             rawDamage = ApplyMultiplier(rawDamage, hexagramMultiplier);
+            rawDamage = ApplyMultiplier(rawDamage, masteryMultiplier);
             rawDamage = ApplyMultiplier(rawDamage, elementMultiplier);
             rawDamage = ApplyMultiplier(rawDamage, artifactAdditive);
             rawDamage = ApplyMultiplier(rawDamage, artifactMultiplicative);
@@ -43,6 +45,7 @@ namespace BalartroLike.Battle
                 baseDamage,
                 weaponAffinityMultiplier,
                 hexagramMultiplier,
+                masteryMultiplier,
                 elementMultiplier,
                 artifactAdditive,
                 artifactMultiplicative,

@@ -5,6 +5,7 @@ namespace BalartroLike.Battle
         public int BaseDamage { get; }
         public int WeaponAffinityMultiplier { get; }
         public int HexagramMultiplier { get; }
+        public int MasteryMultiplier { get; }
         public int ElementMultiplier { get; }
         public int ArtifactAdditive { get; }
         public int ArtifactMultiplicative { get; }
@@ -18,6 +19,7 @@ namespace BalartroLike.Battle
             int baseDamage,
             int weaponAffinityMultiplier,
             int hexagramMultiplier,
+            int masteryMultiplier,
             int elementMultiplier,
             int artifactAdditive,
             int artifactMultiplicative,
@@ -30,6 +32,7 @@ namespace BalartroLike.Battle
             BaseDamage = baseDamage;
             WeaponAffinityMultiplier = weaponAffinityMultiplier;
             HexagramMultiplier = hexagramMultiplier;
+            MasteryMultiplier = masteryMultiplier;
             ElementMultiplier = elementMultiplier;
             ArtifactAdditive = artifactAdditive;
             ArtifactMultiplicative = artifactMultiplicative;
@@ -45,6 +48,7 @@ namespace BalartroLike.Battle
             return BaseDamage
                 + " × " + Format(WeaponAffinityMultiplier)
                 + " × " + Format(HexagramMultiplier)
+                + " × " + Format(MasteryMultiplier)
                 + " × " + Format(ElementMultiplier)
                 + " × " + Format(ArtifactAdditive)
                 + " × " + Format(ArtifactMultiplicative)

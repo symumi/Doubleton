@@ -1,9 +1,37 @@
-id,shopId,displayName,effectType,effectValue,price,description
-shop01_heal,shop_01,回春丹,MaxHp,6,25,最大生命 +6
-shop01_forge,shop_01,炼器,WeaponPower,1,30,武器基础力道 +1
-shop01_delete,shop_01,忘尘散,DeleteCard,1,25,删除牌组第一张牌
-shop01_stones,shop_01,聚灵囊,SpiritStones,20,15,获得 20 灵石
-shop02_heal,shop_02,回春丹,MaxHp,8,30,最大生命 +8
-shop02_forge,shop_02,炼器,WeaponPower,1,35,武器基础力道 +1
-shop02_delete,shop_02,忘尘散,DeleteCard,1,35,删除牌组第一张牌
-shop02_stones,shop_02,聚灵囊,SpiritStones,30,20,获得 30 灵石
+id,shopId,displayName,effectType,effectValue,price,contentId,description
+shop01_heal,shop_01,回春丹,MaxHp,6,25,,最大生命 +6
+shop01_forge,shop_01,炼器,WeaponPower,1,30,,武器基础力道 +1
+shop01_delete,shop_01,忘尘散,DeleteCard,1,25,,删除牌组第一张牌
+shop01_stones,shop_01,聚灵囊,SpiritStones,20,15,,获得 20 灵石
+shop02_heal,shop_02,回春丹,MaxHp,8,30,,最大生命 +8
+shop02_forge,shop_02,炼器,WeaponPower,1,35,,武器基础力道 +1
+shop02_delete,shop_02,忘尘散,DeleteCard,1,35,,删除牌组第一张牌
+shop02_stones,shop_02,聚灵囊,SpiritStones,30,20,,获得 30 灵石
+pool_artifact_first_strike,shop_pool,连山印,Artifact,0,70,artifact_first_strike,每回合第一手伤害 +100%
+pool_artifact_fire_lord,shop_pool,火德星君令,Artifact,0,60,artifact_fire_lord,火属性内卦伤害 ×1.5
+pool_artifact_tai_truth,shop_pool,泰卦真解,Artifact,0,65,artifact_tai_truth,合成地天泰时回灵并抽牌
+pool_artifact_metal_edge,shop_pool,庚金锋,Artifact,0,45,artifact_metal_edge,金属性内卦伤害 +25%
+pool_artifact_water_mirror,shop_pool,玄水镜,Artifact,0,45,artifact_water_mirror,水属性内卦伤害 +25%
+pool_artifact_wood_growth,shop_pool,青木令,Artifact,0,45,artifact_wood_growth,木属性内卦伤害 +25%
+pool_artifact_earth_vein,shop_pool,厚土印,Artifact,0,45,artifact_earth_vein,土属性内卦伤害 +25%
+pool_artifact_heaven_mandate,shop_pool,天命玉圭,Artifact,0,80,artifact_heaven_mandate,乾为天伤害 ×1.75
+pool_artifact_earth_burden,shop_pool,坤元佩,Artifact,0,65,artifact_earth_burden,坤为地伤害 +40%
+pool_artifact_thunder_seal,shop_pool,震雷符印,Artifact,0,70,artifact_thunder_seal,震为雷伤害 +50%
+pool_artifact_balance_scale,shop_pool,两仪秤,Artifact,0,45,artifact_balance_scale,所有出卦伤害 +10%
+pool_artifact_fire_water_cycle,shop_pool,既济珠,Artifact,0,75,artifact_fire_water_cycle,水火既济伤害 ×1.6
+pool_artifact_water_fire_cycle,shop_pool,未济铃,Artifact,0,75,artifact_water_fire_cycle,火水未济伤害 ×1.6
+pool_artifact_first_guard,shop_pool,守一符,Artifact,0,35,artifact_first_guard,每回合第一手获得 8 点护盾
+pool_artifact_first_insight,shop_pool,一炁丹,Artifact,0,40,artifact_first_insight,每回合第一手抽 1 张牌
+pool_artifact_qian_kun_break,shop_pool,否极印,Artifact,0,55,artifact_qian_kun_break,天地否额外施加破甲
+pool_artifact_thunder_burn,shop_pool,噬嗑牙,Artifact,0,60,artifact_thunder_burn,火雷噬嗑额外施加灼烧
+pool_artifact_water_waiting,shop_pool,需卦盘,Artifact,0,45,artifact_water_waiting,水天需额外获得护盾与灵力
+pool_artifact_earth_harvest,shop_pool,豫卦穗,Artifact,0,50,artifact_earth_harvest,雷地豫额外抽牌与回灵
+pool_artifact_wind_benefit,shop_pool,益卦风铃,Artifact,0,55,artifact_wind_benefit,风雷益额外回灵与抽牌
+pool_talisman_energy,shop_pool,补天丹,Talisman,0,15,talisman_energy,本回合灵力 +1
+pool_talisman_shield,shop_pool,护身符,Talisman,0,18,talisman_shield,获得 6 点护盾
+pool_talisman_draw,shop_pool,观星符,Talisman,0,18,talisman_draw,抽 1 张牌
+pool_talisman_greater_energy,shop_pool,聚灵符,Talisman,0,25,talisman_greater_energy,本回合灵力 +2
+pool_talisman_iron_skin,shop_pool,金刚符,Talisman,0,30,talisman_iron_skin,获得 12 点护盾
+pool_talisman_insight,shop_pool,洞玄符,Talisman,0,30,talisman_insight,抽 2 张牌
+pool_talisman_break,shop_pool,破甲符,Talisman,0,25,talisman_break,对敌人施加 2 层破甲
+pool_talisman_burn,shop_pool,烈焰符,Talisman,0,28,talisman_burn,对敌人施加 4 层灼烧

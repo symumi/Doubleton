@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using BalartroLike.Battle;
 using BalartroLike.Run;
@@ -54,6 +55,8 @@ namespace BalartroLike.Tests
         public void SaveService_ShopStateRoundTrip()
         {
             RunController run = CreateRunAtFirstShop();
+            run.State.ActiveShopOfferIds.Clear();
+            run.State.ActiveShopOfferIds.Add("shop01_heal");
             Assert.IsTrue(run.BuyShopOffer("shop01_heal").Success);
             Assert.IsTrue(run.RefreshShop().Success);
             string[] offers = run.State.ActiveShopOfferIds.ToArray();
@@ -91,8 +94,10 @@ namespace BalartroLike.Tests
             {
                 DaoHeart = 320,
                 HighestHeavenTribulation = 2,
+                SelectedHeavenTribulation = 2,
                 CompletedRunCount = 4
             };
+            meta.HexagramUses.Add("qian_qian", 12);
 
             GameSaveData data = new GameSaveData
             {
@@ -101,7 +106,12 @@ namespace BalartroLike.Tests
                 {
                     dao_heart = meta.DaoHeart,
                     highest_heaven_tribulation = meta.HighestHeavenTribulation,
-                    completed_run_count = meta.CompletedRunCount
+                    selected_heaven_tribulation = meta.SelectedHeavenTribulation,
+                    completed_run_count = meta.CompletedRunCount,
+                    hexagram_uses = new List<HexagramUseSaveData>
+                    {
+                        new HexagramUseSaveData { hexagram_id = "qian_qian", use_count = 12 }
+                    }
                 }
             };
 
@@ -110,7 +120,28 @@ namespace BalartroLike.Tests
             Assert.IsNull(battle);
             Assert.AreEqual(meta.DaoHeart, restoredMeta.DaoHeart);
             Assert.AreEqual(meta.HighestHeavenTribulation, restoredMeta.HighestHeavenTribulation);
+            Assert.AreEqual(meta.SelectedHeavenTribulation, restoredMeta.SelectedHeavenTribulation);
             Assert.AreEqual(meta.CompletedRunCount, restoredMeta.CompletedRunCount);
+            Assert.AreEqual(12, restoredMeta.HexagramUses["qian_qian"]);
+        }
+
+        [Test]
+        public void SaveService_TribulationRoundTripPreservesRunAndBattle()
+        {
+            RunMetaProgressState meta = new RunMetaProgressState
+            {
+                HighestHeavenTribulation = 3,
+                SelectedHeavenTribulation = 3
+            };
+            RunController run = RunController.CreatePrototype(1234, meta);
+            BattleController battle = run.StartBattle();
+            GameSaveData data = SaveService.Capture(run, battle);
+
+            Assert.IsTrue(SaveService.TryRestore(data, out RunController restoredRun, out BattleController restoredBattle, out RunMetaProgressState restoredMeta, out string error), error);
+            Assert.AreEqual(3, restoredMeta.SelectedHeavenTribulation);
+            Assert.AreEqual(3, restoredRun.State.HeavenTribulationLevel);
+            Assert.AreEqual(battle.State.Enemy.MaxHp, restoredBattle.State.Enemy.MaxHp);
+            Assert.AreEqual(2, restoredBattle.State.Enemy.PowerBonus);
         }
 
         [Test]

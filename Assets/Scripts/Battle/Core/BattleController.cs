@@ -29,7 +29,10 @@ namespace BalartroLike.Battle
             int weaponPowerBonus = 0,
             string weaponId = null,
             IReadOnlyList<string> artifactIds = null,
-            IReadOnlyList<string> talismanIds = null)
+            IReadOnlyList<string> talismanIds = null,
+            Dictionary<string, int> hexagramUses = null,
+            int enemyHpPercent = 100,
+            int enemyPowerBonus = 0)
         {
             if (!BattleConfigDatabase.IsLoaded)
             {
@@ -58,14 +61,15 @@ namespace BalartroLike.Battle
                 enemyDefinition.Id,
                 enemyDefinition.DisplayName,
                 enemyDefinition.Element,
-                enemyDefinition.MaxHp,
+                ScalePercent(enemyDefinition.MaxHp, enemyHpPercent),
                 enemyDefinition.BasePower,
                 enemyDefinition.Kind,
                 enemyDefinition.IntentMode,
                 enemyDefinition.Intents,
-                enemyDefinition.RuleType);
+                enemyDefinition.RuleType,
+                enemyPowerBonus);
 
-            BattleState state = new BattleState(seed >= 0 ? seed : defaults.DefaultSeed, player, enemy);
+            BattleState state = new BattleState(seed >= 0 ? seed : defaults.DefaultSeed, player, enemy, hexagramUses);
             state.DiscardLimit = defaults.DiscardLimit;
             state.HandLimit = defaults.HandSize;
             BuildDeck(state, deckEntries ?? BattleConfigDatabase.Deck);
@@ -295,6 +299,11 @@ namespace BalartroLike.Battle
             EnemyIntent intent = _intentSelector.SelectNext(State.Enemy, State.Turn, _random);
             State.Enemy.SetIntent(intent);
             State.Events.Add(new BattleEvent(BattleEventType.EnemyIntentChanged, intent.DisplayText, intent.Power));
+        }
+
+        private static int ScalePercent(int value, int percent)
+        {
+            return (value * percent + 99) / 100;
         }
 
         private static void BuildDeck(BattleState state, IReadOnlyList<DeckEntryDefinition> entries)

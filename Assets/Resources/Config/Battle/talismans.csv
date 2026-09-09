@@ -2,3 +2,8 @@ id,displayName,effects,description
 talisman_energy,补天丹,GainEnergy|Self|Flat|1|None|0|0,本回合灵力 +1
 talisman_shield,护身符,GainShield|Self|Flat|6|None|0|0,获得 6 点护盾
 talisman_draw,观星符,DrawCard|Self|Count|1|None|0|0,抽 1 张牌
+talisman_greater_energy,聚灵符,GainEnergy|Self|Flat|2|None|0|0,本回合灵力 +2
+talisman_iron_skin,金刚符,GainShield|Self|Flat|12|None|0|0,获得 12 点护盾
+talisman_insight,洞玄符,DrawCard|Self|Count|2|None|0|0,抽 2 张牌
+talisman_break,破甲符,ApplyStatus|Enemy|Stacks|2|ArmorBreak|2|2,对敌人施加 2 层破甲
+talisman_burn,烈焰符,ApplyStatus|Enemy|Stacks|4|Burn|4|2,对敌人施加 4 层灼烧

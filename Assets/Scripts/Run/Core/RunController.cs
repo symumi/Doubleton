@@ -8,13 +8,20 @@ namespace BalartroLike.Run
     {
         private const int ShopRefreshCost = 20;
         private const int ShopRefreshLimit = 2;
-        private const int ShopOfferCount = 3;
+        private const int ShopOfferCount = 4;
+        private const int ArtifactLimit = 4;
+        private const int TalismanLimit = 5;
+        private const string ContentPoolShopId = "shop_pool";
         private const int VictoryDaoHeart = 120;
         private const int DefeatDaoHeart = 30;
         private readonly IReadOnlyList<RunNodeDefinition> _nodes;
 
         public RunState State { get; }
         public RunMetaProgressState MetaProgress { get; }
+        public HeavenTribulationDefinition CurrentTribulation
+        {
+            get { return RunConfigDatabase.GetTribulation(State.HeavenTribulationLevel); }
+        }
 
         public int NodeCount
         {
@@ -36,6 +43,7 @@ namespace BalartroLike.Run
             _nodes = nodes;
             State = new RunState(seed);
             MetaProgress = metaProgress ?? new RunMetaProgressState();
+            State.HeavenTribulationLevel = ResolveSelectedTribulation();
             BuildDeck();
             State.WeaponId = BattleConfigDatabase.Default.DefaultWeaponId;
             State.ArtifactIds.AddRange(BattleConfigDatabase.Default.DefaultArtifactIds);
@@ -84,13 +92,16 @@ namespace BalartroLike.Run
 
             BattleController battle = BattleController.CreatePrototype(
                 State.Seed + State.CurrentNodeIndex,
-                CurrentNode.EnemyId,
+                CurrentNode.SelectEnemyId(State.Seed + State.CurrentNodeIndex),
                 deckEntries,
                 State.MaxHpBonus,
                 State.WeaponPowerBonus,
                 State.WeaponId,
                 State.ArtifactIds,
-                State.TalismanIds);
+                State.TalismanIds,
+                MetaProgress.HexagramUses,
+                CurrentTribulation.EnemyHpPercent,
+                CurrentTribulation.EnemyPowerBonus);
             State.Phase = RunPhase.Battle;
             return battle;
         }
@@ -189,9 +200,9 @@ namespace BalartroLike.Run
 
             MetaProgress.DaoHeart += State.DaoHeartReward;
             MetaProgress.CompletedRunCount++;
-            if (State.Result == RunResultType.Victory && MetaProgress.HighestHeavenTribulation < 1)
+            if (State.Result == RunResultType.Victory)
             {
-                MetaProgress.HighestHeavenTribulation = 1;
+                UnlockNextHeavenTribulation();
             }
 
             State.Phase = RunPhase.MetaProgress;
@@ -215,7 +226,8 @@ namespace BalartroLike.Run
                 return RunCommandResult.Fail("商品不存在");
             }
 
-            if (State.SpiritStones < offer.Price)
+            int price = GetShopPrice(offer);
+            if (State.SpiritStones < price)
             {
                 return RunCommandResult.Fail("灵石不足");
             }
@@ -225,10 +237,46 @@ namespace BalartroLike.Run
                 return RunCommandResult.Fail("牌组为空");
             }
 
-            State.SpiritStones -= offer.Price;
-            ApplyEffect(offer.EffectType, offer.EffectValue);
+            if (offer.EffectType == RunEffectType.Artifact)
+            {
+                if (State.ArtifactIds.Count >= ArtifactLimit)
+                {
+                    return RunCommandResult.Fail("法宝栏已满");
+                }
+
+                if (State.ArtifactIds.Contains(offer.ContentId))
+                {
+                    return RunCommandResult.Fail("已拥有该法宝");
+                }
+
+                if (!BattleConfigDatabase.TryGetArtifact(offer.ContentId, out _))
+                {
+                    return RunCommandResult.Fail("法宝配置不存在");
+                }
+            }
+
+            if (offer.EffectType == RunEffectType.Talisman)
+            {
+                if (State.TalismanIds.Count >= TalismanLimit)
+                {
+                    return RunCommandResult.Fail("符箓栏已满");
+                }
+
+                if (!BattleConfigDatabase.TryGetTalisman(offer.ContentId, out _))
+                {
+                    return RunCommandResult.Fail("符箓配置不存在");
+                }
+            }
+
+            State.SpiritStones -= price;
+            ApplyEffect(offer.EffectType, offer.EffectValue, offer.ContentId);
             State.PurchasedShopOfferIds.Add(offerId);
             return RunCommandResult.Ok();
+        }
+
+        public int GetShopPrice(RunShopOfferDefinition offer)
+        {
+            return (offer.Price * CurrentTribulation.ShopPricePercent + 99) / 100;
         }
 
         public RunCommandResult RefreshShop()
@@ -343,6 +391,20 @@ namespace BalartroLike.Run
             // TODO: 接入符箓/法宝奖励池后，再补晋升随机奖励。
         }
 
+        private int ResolveSelectedTribulation()
+        {
+            int maxLevel = RunConfigDatabase.MaxTribulationLevel;
+            MetaProgress.HighestHeavenTribulation = Math.Max(0, Math.Min(MetaProgress.HighestHeavenTribulation, maxLevel));
+            MetaProgress.SelectedHeavenTribulation = Math.Max(0, Math.Min(MetaProgress.SelectedHeavenTribulation, MetaProgress.HighestHeavenTribulation));
+            return MetaProgress.SelectedHeavenTribulation;
+        }
+
+        private void UnlockNextHeavenTribulation()
+        {
+            int nextLevel = Math.Min(RunConfigDatabase.MaxTribulationLevel, State.HeavenTribulationLevel + 1);
+            MetaProgress.HighestHeavenTribulation = Math.Max(MetaProgress.HighestHeavenTribulation, nextLevel);
+        }
+
         private void FinalizeRun(RunResultType result)
         {
             State.Result = result;
@@ -388,33 +450,82 @@ namespace BalartroLike.Run
 
         private void RebuildShopOffers()
         {
-            IReadOnlyList<RunShopOfferDefinition> offers = RunEncounterDatabase.GetShopOffers(State.ActiveShopId);
-            State.ActiveShopOfferIds.Clear();
-            for (int i = 0; i < offers.Count && State.ActiveShopOfferIds.Count < ShopOfferCount; i++)
+            List<string> purchasedOffers = new List<string>();
+            for (int i = 0; i < State.ActiveShopOfferIds.Count; i++)
             {
-                if (State.PurchasedShopOfferIds.Contains(offers[i].Id))
+                string offerId = State.ActiveShopOfferIds[i];
+                if (State.PurchasedShopOfferIds.Contains(offerId))
                 {
-                    State.ActiveShopOfferIds.Add(offers[i].Id);
+                    purchasedOffers.Add(offerId);
                 }
             }
 
-            if (offers.Count == 0)
+            State.ActiveShopOfferIds.Clear();
+            State.ActiveShopOfferIds.AddRange(purchasedOffers);
+
+            AddRandomOffers(RunEncounterDatabase.GetShopOffers(State.ActiveShopId), 1, null);
+            IReadOnlyList<RunShopOfferDefinition> contentPool = RunEncounterDatabase.GetShopOffers(ContentPoolShopId);
+            AddRandomOffers(contentPool, 2, RunEffectType.Artifact);
+            AddRandomOffers(contentPool, 1, RunEffectType.Talisman);
+        }
+
+        private void AddRandomOffers(
+            IReadOnlyList<RunShopOfferDefinition> candidates,
+            int targetCount,
+            RunEffectType? effectType)
+        {
+            int currentCount = 0;
+            for (int i = 0; i < State.ActiveShopOfferIds.Count; i++)
+            {
+                if (!RunEncounterDatabase.TryGetShopOffer(State.ActiveShopOfferIds[i], out RunShopOfferDefinition activeOffer))
+                {
+                    continue;
+                }
+
+                if (!effectType.HasValue || activeOffer.EffectType == effectType.Value)
+                {
+                    currentCount++;
+                }
+            }
+
+            if (currentCount >= targetCount)
             {
                 return;
             }
 
-            int startIndex = State.ShopRefreshCount % offers.Count;
-            for (int i = 0; i < offers.Count && State.ActiveShopOfferIds.Count < ShopOfferCount; i++)
+            List<RunShopOfferDefinition> eligible = new List<RunShopOfferDefinition>();
+            for (int i = 0; i < candidates.Count; i++)
             {
-                RunShopOfferDefinition offer = offers[(startIndex + i) % offers.Count];
-                if (!State.PurchasedShopOfferIds.Contains(offer.Id) && !State.ActiveShopOfferIds.Contains(offer.Id))
+                RunShopOfferDefinition candidate = candidates[i];
+                if (State.ActiveShopOfferIds.Contains(candidate.Id) || State.PurchasedShopOfferIds.Contains(candidate.Id))
                 {
-                    State.ActiveShopOfferIds.Add(offer.Id);
+                    continue;
                 }
+
+                if (effectType.HasValue && candidate.EffectType != effectType.Value)
+                {
+                    continue;
+                }
+
+                if (candidate.EffectType == RunEffectType.Artifact && State.ArtifactIds.Contains(candidate.ContentId))
+                {
+                    continue;
+                }
+
+                eligible.Add(candidate);
+            }
+
+            Random random = new Random(State.Seed + State.CurrentNodeIndex * 397 + State.ShopRefreshCount * 7919 + (effectType.HasValue ? (int)effectType.Value : 0));
+            while (currentCount < targetCount && eligible.Count > 0)
+            {
+                int index = random.Next(eligible.Count);
+                State.ActiveShopOfferIds.Add(eligible[index].Id);
+                eligible.RemoveAt(index);
+                currentCount++;
             }
         }
 
-        private void ApplyEffect(RunEffectType effectType, int value)
+        private void ApplyEffect(RunEffectType effectType, int value, string contentId = null)
         {
             switch (effectType)
             {
@@ -429,6 +540,12 @@ namespace BalartroLike.Run
                     break;
                 case RunEffectType.SpiritStones:
                     State.SpiritStones += value;
+                    break;
+                case RunEffectType.Artifact:
+                    State.ArtifactIds.Add(contentId);
+                    break;
+                case RunEffectType.Talisman:
+                    State.TalismanIds.Add(contentId);
                     break;
             }
         }

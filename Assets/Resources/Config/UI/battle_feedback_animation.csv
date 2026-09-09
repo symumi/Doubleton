@@ -1,0 +1,10 @@
+key,value
+duration,0.55
+riseDistance,44
+startScale,0.82
+punchScale,1.16
+endScale,1
+shakeDistance,6
+shakeFrequency,3
+fadeStart,0.55
+punchTime,0.18

@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using BalartroLike.Battle;
+using BalartroLike.Unity;
 using NUnit.Framework;
 
 namespace BalartroLike.Tests
@@ -9,6 +11,36 @@ namespace BalartroLike.Tests
         public void LoadBattleConfig()
         {
             ResourcesBattleConfigLoader.LoadIfNeeded();
+        }
+
+        [Test]
+        public void ContentConfig_ContainsMvpCounts()
+        {
+            int normalCount = 0;
+            int eliteCount = 0;
+            int bossCount = 0;
+            for (int i = 0; i < BattleConfigDatabase.Enemies.Count; i++)
+            {
+                EnemyKind kind = BattleConfigDatabase.Enemies[i].Kind;
+                normalCount += kind == EnemyKind.Normal ? 1 : 0;
+                eliteCount += kind == EnemyKind.Elite ? 1 : 0;
+                bossCount += kind == EnemyKind.Boss ? 1 : 0;
+            }
+
+            Assert.GreaterOrEqual(BattleConfigDatabase.Artifacts.Count, 20);
+            Assert.GreaterOrEqual(BattleConfigDatabase.Talismans.Count, 8);
+            Assert.GreaterOrEqual(normalCount, 6);
+            Assert.GreaterOrEqual(eliteCount, 3);
+            Assert.GreaterOrEqual(bossCount, 3);
+        }
+
+        [Test]
+        public void EnemyConfig_AllDefinitionsHaveIntents()
+        {
+            for (int i = 0; i < BattleConfigDatabase.Enemies.Count; i++)
+            {
+                Assert.Greater(BattleConfigDatabase.Enemies[i].Intents.Count, 0, BattleConfigDatabase.Enemies[i].Id);
+            }
         }
 
         [Test]
@@ -88,6 +120,51 @@ namespace BalartroLike.Tests
             Assert.AreEqual(preview.Calculation.Damage.FinalDamage, execution.Calculation.Damage.FinalDamage);
         }
 
+        [Test]
+        public void Calculation_CanDefeatCountsAllHitsAndShield()
+        {
+            EnemyState enemy = new EnemyState("test_enemy", "测试敌人", ElementType.Wood, 10, 1);
+            DamageBreakdown damage = new DamageBreakdown(
+                1, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 6, 0, 6);
+            BattleCalculation calculation = new BattleCalculation(
+                1,
+                2,
+                HexagramCatalog.Get(TrigramId.Qian, TrigramId.Qian),
+                damage,
+                AttackPattern.Single,
+                2,
+                new List<EffectOperation>());
+
+            Assert.IsTrue(calculation.CanDefeat(enemy));
+            enemy.AddShield(2);
+            Assert.IsTrue(calculation.CanDefeat(enemy));
+            enemy.AddShield(1);
+            Assert.IsFalse(calculation.CanDefeat(enemy));
+        }
+        [Test]
+        public void BattleFeedbackAnimationConfig_ParsesExternalValues()
+        {
+            string csv = "key,value\n"
+                + "duration,0.8\n"
+                + "riseDistance,60\n"
+                + "startScale,0.7\n"
+                + "punchScale,1.2\n"
+                + "endScale,1\n"
+                + "shakeDistance,4\n"
+                + "shakeFrequency,2.5\n"
+                + "fadeStart,0.6\n"
+                + "punchTime,0.2";
+
+            BattleFeedbackAnimationConfig config = BattleFeedbackAnimationConfig.Parse(csv);
+
+            Assert.AreEqual(0.8f, config.Duration, 0.0001f);
+            Assert.AreEqual(60f, config.RiseDistance, 0.0001f);
+            Assert.AreEqual(0.7f, config.StartScale, 0.0001f);
+            Assert.AreEqual(1.2f, config.PunchScale, 0.0001f);
+            Assert.AreEqual(4f, config.ShakeDistance, 0.0001f);
+            Assert.AreEqual(0.6f, config.FadeStart, 0.0001f);
+            Assert.AreEqual(0.2f, config.PunchTime, 0.0001f);
+        }
         [Test]
         public void WeaponConfig_ContainsDistinctAttackPatterns()
         {
@@ -440,6 +517,81 @@ namespace BalartroLike.Tests
             Assert.AreEqual(hpBefore - enemyPower, controller.State.Player.Hp);
             Assert.AreEqual(2, controller.State.Turn);
             Assert.AreEqual(BattlePhase.PlayerAction, controller.State.Phase);
+        }
+
+        [Test]
+        public void HexagramConfig_ContainsAtLeast16SpecialDefinitions()
+        {
+            int specialCount = 0;
+            for (int outer = 0; outer < 8; outer++)
+            {
+                for (int inner = 0; inner < 8; inner++)
+                {
+                    HexagramDefinition hexagram = HexagramCatalog.Get((TrigramId)outer, (TrigramId)inner);
+                    if (!hexagram.IsSpecial)
+                    {
+                        continue;
+                    }
+
+                    specialCount++;
+                    Assert.IsFalse(string.IsNullOrWhiteSpace(hexagram.Description));
+                }
+            }
+
+            Assert.GreaterOrEqual(specialCount, 16);
+        }
+
+        [Test]
+        public void HexagramMastery_ThresholdsAndBonus()
+        {
+            Assert.AreEqual(0, HexagramMastery.GetLevel(0));
+            Assert.AreEqual(1, HexagramMastery.GetLevel(1));
+            Assert.AreEqual(2, HexagramMastery.GetLevel(3));
+            Assert.AreEqual(4, HexagramMastery.GetLevel(10));
+            Assert.AreEqual(5, HexagramMastery.GetLevel(15));
+            Assert.IsTrue(HexagramMastery.IsMastered(15));
+            Assert.AreEqual(HexagramMastery.MasteryDamageMultiplier, HexagramMastery.GetDamageMultiplier(15));
+        }
+
+        [Test]
+        public void Resolver_RecordsHexagramUse()
+        {
+            Dictionary<string, int> uses = new Dictionary<string, int>();
+            DeckEntryDefinition[] deck =
+            {
+                new DeckEntryDefinition(TrigramId.Qian, 1, 1, 1),
+                new DeckEntryDefinition(TrigramId.Li, 1, 1, 1),
+            };
+            BattleController controller = BattleController.CreatePrototype(1234, deckEntries: deck, hexagramUses: uses);
+            BattleState state = controller.State;
+            CardInstance inner = FindCard(state, TrigramId.Qian);
+            CardInstance outer = FindOtherCard(state, inner.Uid);
+
+            BattleCommandResult result = controller.PlayHexagram(inner.Uid, outer.Uid);
+
+            Assert.IsTrue(result.Success, result.Error);
+            Assert.AreEqual(1, uses[result.Calculation.Hexagram.Id]);
+        }
+
+        [Test]
+        public void Calculator_AppliesMasteryBonus()
+        {
+            Dictionary<string, int> uses = new Dictionary<string, int>();
+            uses.Add("li_qian", 15);
+            DeckEntryDefinition[] deck =
+            {
+                new DeckEntryDefinition(TrigramId.Qian, 1, 1, 1),
+                new DeckEntryDefinition(TrigramId.Li, 1, 1, 1),
+            };
+            BattleController controller = BattleController.CreatePrototype(1234, deckEntries: deck, hexagramUses: uses);
+            BattleState state = controller.State;
+            CardInstance inner = FindCard(state, TrigramId.Qian);
+            CardInstance outer = FindOtherCard(state, inner.Uid);
+
+            BattleCalculation calculation = new BattleCalculator().CalculatePlay(state, inner, outer);
+
+            Assert.AreEqual("li_qian", calculation.Hexagram.Id);
+            Assert.AreEqual(HexagramMastery.MasteryDamageMultiplier, calculation.Damage.MasteryMultiplier);
         }
 
         private static CardInstance FindCard(BattleState state, TrigramId trigram)

@@ -8,6 +8,7 @@ namespace BalartroLike.Run
         public RunEffectType EffectType { get; }
         public int EffectValue { get; }
         public int Price { get; }
+        public string ContentId { get; }
         public string Description { get; }
 
         public RunShopOfferDefinition(
@@ -17,6 +18,7 @@ namespace BalartroLike.Run
             RunEffectType effectType,
             int effectValue,
             int price,
+            string contentId,
             string description)
         {
             Id = id;
@@ -25,6 +27,7 @@ namespace BalartroLike.Run
             EffectType = effectType;
             EffectValue = effectValue;
             Price = price;
+            ContentId = contentId;
             Description = description;
         }
     }

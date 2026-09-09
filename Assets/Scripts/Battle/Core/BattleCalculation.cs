@@ -12,6 +12,11 @@ namespace BalartroLike.Battle
         public int HitCount { get; }
         public List<EffectOperation> Effects { get; }
 
+        public bool CanDefeat(EnemyState enemy)
+        {
+            return Damage.RawDamage * HitCount >= enemy.Hp + enemy.Shield;
+        }
+
         public BattleCalculation(
             int innerCardUid,
             int outerCardUid,

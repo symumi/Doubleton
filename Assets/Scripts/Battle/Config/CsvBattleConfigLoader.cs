@@ -97,7 +97,8 @@ namespace BalartroLike.Battle
                     ParseEnum<TrigramId>(table.Get(row, "inner")),
                     ParseNullableInt(table.Get(row, "damageMultiplierOverride")),
                     ParseNullableBool(table.Get(row, "guaranteedCriticalOverride")),
-                    ParseEffects(table.Get(row, "additionalEffects"))));
+                    ParseEffects(table.Get(row, "additionalEffects")),
+                    table.Get(row, "description")));
             }
 
             return definitions;

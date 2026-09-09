@@ -17,10 +17,16 @@ namespace BalartroLike.Run
             string nodeContent = File.ReadAllText(Path.Combine(directory, "run_nodes.csv"), Encoding.UTF8);
             string encounterContent = File.ReadAllText(Path.Combine(directory, "run_encounters.csv"), Encoding.UTF8);
             string realmContent = File.ReadAllText(Path.Combine(directory, "run_realms.csv"), Encoding.UTF8);
-            Load(nodeContent, encounterContent, realmContent);
+            string tribulationContent = File.ReadAllText(Path.Combine(directory, "run_tribulations.csv"), Encoding.UTF8);
+            Load(nodeContent, encounterContent, realmContent, tribulationContent);
         }
 
         public static void Load(string nodeContent, string encounterContent, string realmContent)
+        {
+            Load(nodeContent, encounterContent, realmContent, null);
+        }
+
+        public static void Load(string nodeContent, string encounterContent, string realmContent, string tribulationContent)
         {
             if (string.IsNullOrWhiteSpace(nodeContent))
             {
@@ -51,13 +57,13 @@ namespace BalartroLike.Run
                     Get(headers, row, "realmId"),
                     Get(headers, row, "displayName"),
                     ParseEnum<RunNodeType>(Get(headers, row, "type")),
-                    Get(headers, row, "enemyId"),
+                    ParseStringList(Get(headers, row, "enemyId")),
                     ParseInt(Get(headers, row, "rewardSpiritStones")),
                     encounter.Type,
                     encounter.Id));
             }
 
-            RunConfigDatabase.Load(nodes, ParseRealms(realmContent));
+            RunConfigDatabase.Load(nodes, ParseRealms(realmContent), ParseTribulations(tribulationContent));
         }
 
         public static void LoadEncounters(string shopOfferContent, string eventOptionContent)
@@ -80,6 +86,7 @@ namespace BalartroLike.Run
                     ParseEnum<RunEffectType>(Get(shopHeaders, row, "effectType")),
                     ParseInt(Get(shopHeaders, row, "effectValue")),
                     ParseInt(Get(shopHeaders, row, "price")),
+                    Get(shopHeaders, row, "contentId"),
                     Get(shopHeaders, row, "description")));
             }
 
@@ -101,6 +108,36 @@ namespace BalartroLike.Run
             }
 
             RunEncounterDatabase.Load(shopOffers, eventOptions);
+        }
+
+        private static List<HeavenTribulationDefinition> ParseTribulations(string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return null;
+            }
+
+            string[] lines = content.TrimStart('\uFEFF').Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            if (lines.Length < 2)
+            {
+                throw new FormatException("Run tribulation config has no data rows.");
+            }
+
+            string[] headers = lines[0].Split(',');
+            List<HeavenTribulationDefinition> tribulations = new List<HeavenTribulationDefinition>();
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string[] row = lines[i].Split(',');
+                tribulations.Add(new HeavenTribulationDefinition(
+                    ParseInt(Get(headers, row, "level")),
+                    Get(headers, row, "displayName"),
+                    ParseInt(Get(headers, row, "enemyHpPercent")),
+                    ParseInt(Get(headers, row, "enemyPowerBonus")),
+                    ParseInt(Get(headers, row, "shopPricePercent")),
+                    Get(headers, row, "description")));
+            }
+
+            return tribulations;
         }
 
         private static List<RunRealmDefinition> ParseRealms(string content)
@@ -167,6 +204,13 @@ namespace BalartroLike.Run
             }
 
             return row[index].Trim();
+        }
+
+        private static string[] ParseStringList(string value)
+        {
+            return string.IsNullOrWhiteSpace(value)
+                ? new string[0]
+                : value.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
         }
 
         private static int ParseInt(string value)

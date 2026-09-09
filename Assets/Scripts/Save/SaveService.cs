@@ -182,12 +182,24 @@ namespace BalartroLike.Save
 
         private static MetaSaveData CaptureMeta(RunMetaProgressState meta)
         {
-            return new MetaSaveData
+            MetaSaveData data = new MetaSaveData
             {
                 dao_heart = meta.DaoHeart,
                 highest_heaven_tribulation = meta.HighestHeavenTribulation,
+                selected_heaven_tribulation = meta.SelectedHeavenTribulation,
                 completed_run_count = meta.CompletedRunCount
             };
+
+            foreach (KeyValuePair<string, int> entry in meta.HexagramUses)
+            {
+                data.hexagram_uses.Add(new HexagramUseSaveData
+                {
+                    hexagram_id = entry.Key,
+                    use_count = entry.Value
+                });
+            }
+
+            return data;
         }
 
         private static RunSaveData CaptureRun(RunState state)
@@ -206,6 +218,7 @@ namespace BalartroLike.Save
                 dao_heart_reward = state.DaoHeartReward,
                 max_hp_bonus = state.MaxHpBonus,
                 weapon_power_bonus = state.WeaponPowerBonus,
+                heaven_tribulation_level = state.HeavenTribulationLevel,
                 weapon_id = state.WeaponId,
                 active_shop_id = state.ActiveShopId,
                 shop_refresh_count = state.ShopRefreshCount,
@@ -261,6 +274,7 @@ namespace BalartroLike.Save
                     hp = state.Enemy.Hp,
                     shield = state.Enemy.Shield,
                     base_power = state.Enemy.BasePower,
+                    power_bonus = state.Enemy.PowerBonus,
                     intent_sequence_index = state.Enemy.IntentSequenceIndex,
                     has_intent = state.Enemy.CurrentIntent != null
                 },
@@ -377,7 +391,22 @@ namespace BalartroLike.Save
 
             meta.DaoHeart = data.dao_heart;
             meta.HighestHeavenTribulation = data.highest_heaven_tribulation;
+            meta.SelectedHeavenTribulation = data.selected_heaven_tribulation;
             meta.CompletedRunCount = data.completed_run_count;
+            meta.HexagramUses.Clear();
+            if (data.hexagram_uses == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < data.hexagram_uses.Count; i++)
+            {
+                HexagramUseSaveData entry = data.hexagram_uses[i];
+                if (!string.IsNullOrEmpty(entry.hexagram_id) && entry.use_count > 0)
+                {
+                    meta.HexagramUses[entry.hexagram_id] = entry.use_count;
+                }
+            }
         }
 
         private static void ApplyRun(RunState state, RunSaveData data)
@@ -395,6 +424,7 @@ namespace BalartroLike.Save
             state.DaoHeartReward = data.dao_heart_reward;
             state.MaxHpBonus = data.max_hp_bonus;
             state.WeaponPowerBonus = data.weapon_power_bonus;
+            state.HeavenTribulationLevel = data.heaven_tribulation_level;
             state.WeaponId = string.IsNullOrEmpty(data.weapon_id) ? BattleConfigDatabase.Default.DefaultWeaponId : data.weapon_id;
             if (!BattleConfigDatabase.TryGetWeapon(state.WeaponId, out _))
             {
@@ -470,9 +500,10 @@ namespace BalartroLike.Save
                 enemyDefinition.Kind,
                 enemyDefinition.IntentMode,
                 enemyDefinition.Intents,
-                enemyDefinition.RuleType);
+                enemyDefinition.RuleType,
+                data.enemy.power_bonus);
 
-            BattleState state = new BattleState(data.seed, player, enemy)
+            BattleState state = new BattleState(data.seed, player, enemy, run.MetaProgress.HexagramUses)
             {
                 Turn = data.turn,
                 DiscardsRemaining = data.discards_remaining,
@@ -607,6 +638,7 @@ namespace BalartroLike.Save
         private static void Normalize(GameSaveData data)
         {
             data.meta = data.meta ?? new MetaSaveData();
+            data.meta.hexagram_uses = data.meta.hexagram_uses ?? new List<HexagramUseSaveData>();
             if (data.run == null)
             {
                 return;

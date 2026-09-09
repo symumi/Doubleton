@@ -2,3 +2,20 @@ id,displayName,triggerType,conditionType,conditionValue,effects,description
 artifact_first_strike,连山印,BeforeDamage,FirstPlayEachTurn,,ModifyDamage|Self|Percent|10000|None|0|0,每回合第一手伤害 +100%
 artifact_fire_lord,火德星君令,BeforeDamage,InnerElement,Fire,ModifyDamage|Self|Multiplier|15000|None|0|0,火属性内卦伤害 ×1.5
 artifact_tai_truth,泰卦真解,AfterPlay,Hexagram,kun_qian,GainEnergy|Self|Flat|1|None|0|0;DrawCard|Self|Count|1|None|0|0,合成地天泰时回复 1 灵力并抽 1 张牌
+artifact_metal_edge,庚金锋,BeforeDamage,InnerElement,Metal,ModifyDamage|Self|Percent|2500|None|0|0,金属性内卦伤害 +25%
+artifact_water_mirror,玄水镜,BeforeDamage,InnerElement,Water,ModifyDamage|Self|Percent|2500|None|0|0,水属性内卦伤害 +25%
+artifact_wood_growth,青木令,BeforeDamage,InnerElement,Wood,ModifyDamage|Self|Percent|2500|None|0|0,木属性内卦伤害 +25%
+artifact_earth_vein,厚土印,BeforeDamage,InnerElement,Earth,ModifyDamage|Self|Percent|2500|None|0|0,土属性内卦伤害 +25%
+artifact_heaven_mandate,天命玉圭,BeforeDamage,Hexagram,qian_qian,ModifyDamage|Self|Multiplier|17500|None|0|0,乾为天伤害 ×1.75
+artifact_earth_burden,坤元佩,BeforeDamage,Hexagram,kun_kun,ModifyDamage|Self|Percent|4000|None|0|0,坤为地伤害 +40%
+artifact_thunder_seal,震雷符印,BeforeDamage,Hexagram,zhen_zhen,ModifyDamage|Self|Percent|5000|None|0|0,震为雷伤害 +50%
+artifact_balance_scale,两仪秤,BeforeDamage,Always,,ModifyDamage|Self|Percent|1000|None|0|0,所有出卦伤害 +10%
+artifact_fire_water_cycle,既济珠,BeforeDamage,Hexagram,kan_li,ModifyDamage|Self|Multiplier|16000|None|0|0,水火既济伤害 ×1.6
+artifact_water_fire_cycle,未济铃,BeforeDamage,Hexagram,li_kan,ModifyDamage|Self|Multiplier|16000|None|0|0,火水未济伤害 ×1.6
+artifact_first_guard,守一符,AfterPlay,FirstPlayEachTurn,,GainShield|Self|Flat|8|None|0|0,每回合第一手获得 8 点护盾
+artifact_first_insight,一炁丹,AfterPlay,FirstPlayEachTurn,,DrawCard|Self|Count|1|None|0|0,每回合第一手抽 1 张牌
+artifact_qian_kun_break,否极印,AfterPlay,Hexagram,qian_kun,ApplyStatus|Enemy|Stacks|1|ArmorBreak|1|2,合成天地否时额外施加 1 层破甲
+artifact_thunder_burn,噬嗑牙,AfterPlay,Hexagram,li_zhen,ApplyStatus|Enemy|Stacks|2|Burn|2|2,合成火雷噬嗑时额外施加 2 层灼烧
+artifact_water_waiting,需卦盘,AfterPlay,Hexagram,kan_qian,GainShield|Self|Flat|4|None|0|0;GainEnergy|Self|Flat|1|None|0|0,合成水天需时获得 4 点护盾并回复 1 灵力
+artifact_earth_harvest,豫卦穗,AfterPlay,Hexagram,zhen_kun,DrawCard|Self|Count|1|None|0|0;GainEnergy|Self|Flat|1|None|0|0,合成雷地豫时抽 1 张牌并回复 1 灵力
+artifact_wind_benefit,益卦风铃,AfterPlay,Hexagram,xun_zhen,GainEnergy|Self|Flat|2|None|0|0;DrawCard|Self|Count|1|None|0|0,合成风雷益时回复 2 灵力并抽 1 张牌

@@ -13,6 +13,7 @@ namespace BalartroLike.Battle
             state.Player.TrySpendEnergy(1);
 
             events.Add(BattleEvent.HexagramFormed(calculation.Hexagram));
+            state.RecordHexagramUse(calculation.Hexagram.Id);
             // TODO: 多敌人战斗接入后，AllTargets 应对每个目标分别结算 HitCount 次。
             int totalDamage = 0;
             int totalAbsorbed = 0;
@@ -150,16 +151,13 @@ namespace BalartroLike.Battle
             for (int i = 0; i < state.Artifacts.Count; i++)
             {
                 ArtifactDefinition artifact = state.Artifacts[i];
-                if (!ArtifactRules.Matches(state, artifact, hexagram))
+                if (artifact.TriggerType != ArtifactTriggerType.AfterPlay || !ArtifactRules.Matches(state, artifact, hexagram))
                 {
                     continue;
                 }
 
                 events.Add(new BattleEvent(BattleEventType.ArtifactTriggered, "法宝触发：" + artifact.DisplayName));
-                if (artifact.TriggerType == ArtifactTriggerType.AfterPlay)
-                {
-                    ApplyEffects(state, new List<EffectOperation>(artifact.Effects), events);
-                }
+                ApplyEffects(state, new List<EffectOperation>(artifact.Effects), events);
             }
         }
 

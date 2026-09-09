@@ -7,7 +7,8 @@ namespace BalartroLike.Battle
     {
         private static readonly Dictionary<string, WeaponDefinition> WeaponLookup = new Dictionary<string, WeaponDefinition>();
         private static readonly List<WeaponDefinition> WeaponDefinitions = new List<WeaponDefinition>();
-        private static readonly Dictionary<string, EnemyDefinition> Enemies = new Dictionary<string, EnemyDefinition>();
+        private static readonly Dictionary<string, EnemyDefinition> EnemyLookup = new Dictionary<string, EnemyDefinition>();
+        private static readonly List<EnemyDefinition> EnemyDefinitions = new List<EnemyDefinition>();
         private static readonly List<DeckEntryDefinition> DeckEntries = new List<DeckEntryDefinition>();
         private static readonly Dictionary<string, ArtifactDefinition> ArtifactLookup = new Dictionary<string, ArtifactDefinition>();
         private static readonly Dictionary<string, TalismanDefinition> TalismanLookup = new Dictionary<string, TalismanDefinition>();
@@ -18,6 +19,7 @@ namespace BalartroLike.Battle
         public static BattleDefaultDefinition Default { get; private set; }
         public static IReadOnlyList<DeckEntryDefinition> Deck { get { return DeckEntries; } }
         public static IReadOnlyList<WeaponDefinition> Weapons { get { return WeaponDefinitions; } }
+        public static IReadOnlyList<EnemyDefinition> Enemies { get { return EnemyDefinitions; } }
         public static IReadOnlyList<ArtifactDefinition> Artifacts { get { return ArtifactDefinitions; } }
         public static IReadOnlyList<TalismanDefinition> Talismans { get { return TalismanDefinitions; } }
 
@@ -36,7 +38,8 @@ namespace BalartroLike.Battle
 
             WeaponLookup.Clear();
             WeaponDefinitions.Clear();
-            Enemies.Clear();
+            EnemyLookup.Clear();
+            EnemyDefinitions.Clear();
             DeckEntries.Clear();
             ArtifactLookup.Clear();
             TalismanLookup.Clear();
@@ -51,7 +54,8 @@ namespace BalartroLike.Battle
 
             foreach (EnemyDefinition enemy in enemies)
             {
-                Enemies.Add(enemy.Id, enemy);
+                EnemyLookup.Add(enemy.Id, enemy);
+                EnemyDefinitions.Add(enemy);
             }
 
             foreach (DeckEntryDefinition entry in deckEntries)
@@ -71,7 +75,7 @@ namespace BalartroLike.Battle
                 TalismanDefinitions.Add(talisman);
             }
 
-            if (WeaponLookup.Count == 0 || Enemies.Count == 0 || DeckEntries.Count == 0
+            if (WeaponLookup.Count == 0 || EnemyLookup.Count == 0 || DeckEntries.Count == 0
                 || ArtifactLookup.Count == 0 || TalismanLookup.Count == 0)
             {
                 throw new InvalidOperationException("Battle config database is incomplete.");
@@ -98,11 +102,11 @@ namespace BalartroLike.Battle
 
         public static bool TryGetEnemy(string id, out EnemyDefinition enemy)
         {
-            return Enemies.TryGetValue(id, out enemy);
+            return EnemyLookup.TryGetValue(id, out enemy);
         }
         public static EnemyDefinition GetEnemy(string id)
         {
-            if (Enemies.TryGetValue(id, out EnemyDefinition enemy))
+            if (EnemyLookup.TryGetValue(id, out EnemyDefinition enemy))
             {
                 return enemy;
             }

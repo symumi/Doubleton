@@ -17,6 +17,7 @@ namespace BalartroLike.Run
         public int DaoHeartReward { get; set; }
         public int MaxHpBonus { get; set; }
         public int WeaponPowerBonus { get; set; }
+        public int HeavenTribulationLevel { get; set; }
         public string WeaponId { get; set; }
         public string ActiveShopId { get; set; }
         public int ShopRefreshCount { get; set; }

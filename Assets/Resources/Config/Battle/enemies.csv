@@ -1,2 +1,13 @@
 id,displayName,kind,element,maxHp,basePower,intentMode,intentIds,ruleType
 enemy_wood_demon,木魈,Normal,Wood,48,6,Sequence,intent_wood_attack;intent_wood_defend;intent_wood_weaken;intent_wood_burst,None
+enemy_fire_imp,赤焰小妖,Normal,Fire,42,7,Weighted,intent_fire_lash;intent_fire_burn;intent_fire_overheat,None
+enemy_water_wraith,寒潭幽影,Normal,Water,50,6,Sequence,intent_water_lash;intent_water_chill;intent_water_guard;intent_water_surge,None
+enemy_metal_construct,玄铁傀儡,Normal,Metal,55,7,Sequence,intent_metal_strike;intent_metal_guard;intent_metal_sunder,None
+enemy_earth_golem,石心山魈,Normal,Earth,60,5,Sequence,intent_earth_smash;intent_earth_guard;intent_earth_quake,None
+enemy_wind_spirit,青风灵,Normal,Wood,38,8,Weighted,intent_wind_gust;intent_wind_weaken;intent_wind_gale;intent_wind_guard,None
+elite_thunder_beast,雷泽兽,Elite,Wood,75,9,Weighted,intent_thunder_bite;intent_thunder_guard;intent_thunder_break;intent_thunder_burst,None
+elite_flame_general,焚天将,Elite,Fire,85,10,Sequence,intent_flame_slash;intent_flame_sear;intent_flame_guard;intent_flame_burst,None
+elite_frost_serpent,玄冰螭,Elite,Water,80,9,Sequence,intent_frost_bite;intent_frost_chill;intent_frost_guard;intent_frost_burst,None
+boss_qi_guardian,炼气守关者,Boss,Earth,110,10,Sequence,intent_boss_qi_strike;intent_boss_qi_guard;intent_boss_qi_weaken;intent_boss_qi_seal,None
+boss_golden_core,金丹妖王,Boss,Fire,150,13,Weighted,intent_boss_core_strike;intent_boss_core_vulnerable;intent_boss_core_guard;intent_boss_core_burst,None
+boss_nascent_soul,元婴天魔,Boss,Metal,200,16,Sequence,intent_boss_soul_strike;intent_boss_soul_chill;intent_boss_soul_guard;intent_boss_soul_heavenfall,StatusImmune

@@ -20,6 +20,107 @@ namespace BalartroLike.Tests
         }
 
         [Test]
+        public void RunConfig_NodesContainEnemyPools()
+        {
+            for (int i = 0; i < RunConfigDatabase.Nodes.Count; i++)
+            {
+                RunNodeDefinition node = RunConfigDatabase.Nodes[i];
+                Assert.Greater(node.EnemyIds.Count, 0, node.Id);
+                for (int j = 0; j < node.EnemyIds.Count; j++)
+                {
+                    Assert.IsTrue(BattleConfigDatabase.TryGetEnemy(node.EnemyIds[j], out _), node.EnemyIds[j]);
+                }
+            }
+        }
+
+        [Test]
+        public void RunConfig_ContainsTribulations()
+        {
+            Assert.AreEqual(4, RunConfigDatabase.Tribulations.Count);
+            Assert.AreEqual(3, RunConfigDatabase.MaxTribulationLevel);
+            Assert.IsTrue(RunConfigDatabase.TryGetTribulation(0, out HeavenTribulationDefinition baseTribulation));
+            Assert.AreEqual(100, baseTribulation.EnemyHpPercent);
+            Assert.AreEqual(120, RunConfigDatabase.GetTribulation(3).ShopPricePercent);
+        }
+
+        [Test]
+        public void RunController_SelectedTribulationAppliesEnemyModifiers()
+        {
+            RunMetaProgressState meta = new RunMetaProgressState
+            {
+                HighestHeavenTribulation = 3,
+                SelectedHeavenTribulation = 3
+            };
+            RunController run = RunController.CreatePrototype(1234, meta);
+            BattleController battle = run.StartBattle();
+            EnemyDefinition enemyDefinition = BattleConfigDatabase.GetEnemy(battle.State.Enemy.Id);
+            int expectedHp = (enemyDefinition.MaxHp * 140 + 99) / 100;
+
+            Assert.AreEqual(3, run.State.HeavenTribulationLevel);
+            Assert.AreEqual(expectedHp, battle.State.Enemy.MaxHp);
+            Assert.AreEqual(2, battle.State.Enemy.PowerBonus);
+
+            EnemyIntentDefinition attack = new EnemyIntentDefinition(
+                "attack", EnemyIntentType.Attack, 6, StatusId.None, 0, 0, 1, 0, EnemyIntentConditionType.Always, 0, "攻击");
+            EnemyState enemy = new EnemyState(
+                "test", "测试敌人", ElementType.Wood, 60, 6, EnemyKind.Normal, EnemyIntentMode.Sequence,
+                new[] { attack }, EnemyRuleType.None, 2);
+            EnemyIntent intent = new EnemyIntentSelector().SelectNext(enemy, 1, new System.Random(1234));
+
+            Assert.AreEqual(8, intent.Power);
+        }
+
+        [Test]
+        public void RunController_TribulationRaisesShopPrices()
+        {
+            RunMetaProgressState meta = new RunMetaProgressState
+            {
+                HighestHeavenTribulation = 2,
+                SelectedHeavenTribulation = 2
+            };
+            RunController run = CreateRunAtFirstShop(meta);
+            run.State.ActiveShopOfferIds.Clear();
+            run.State.ActiveShopOfferIds.Add("shop01_heal");
+            Assert.IsTrue(RunEncounterDatabase.TryGetShopOffer("shop01_heal", out RunShopOfferDefinition offer));
+            int price = run.GetShopPrice(offer);
+            int stones = run.State.SpiritStones;
+
+            Assert.AreEqual(30, price);
+            Assert.IsTrue(run.BuyShopOffer("shop01_heal").Success);
+            Assert.AreEqual(stones - price, run.State.SpiritStones);
+        }
+
+        [Test]
+        public void RunController_VictoryUnlocksNextTribulation()
+        {
+            RunMetaProgressState meta = new RunMetaProgressState
+            {
+                HighestHeavenTribulation = 1,
+                SelectedHeavenTribulation = 1
+            };
+            RunController run = RunController.CreatePrototype(1234, meta);
+            run.State.Phase = RunPhase.RunResult;
+            run.State.Result = RunResultType.Victory;
+
+            Assert.IsTrue(run.ConfirmRunResult().Success);
+            Assert.AreEqual(2, meta.HighestHeavenTribulation);
+        }
+
+        [Test]
+        public void RunController_ClampsSelectedTribulationToUnlocked()
+        {
+            RunMetaProgressState meta = new RunMetaProgressState
+            {
+                HighestHeavenTribulation = 1,
+                SelectedHeavenTribulation = 3
+            };
+            RunController run = RunController.CreatePrototype(1234, meta);
+
+            Assert.AreEqual(1, run.State.HeavenTribulationLevel);
+            Assert.AreEqual(1, meta.SelectedHeavenTribulation);
+        }
+
+        [Test]
         public void RunController_StartsAtFirstNode()
         {
             RunController run = RunController.CreatePrototype(1234);
@@ -194,6 +295,9 @@ namespace BalartroLike.Tests
         {
             RunController run = CreateRunAtFirstShop();
             int deckCount = run.State.Deck.Count;
+            run.State.ActiveShopOfferIds.Clear();
+            run.State.ActiveShopOfferIds.Add("shop01_heal");
+            run.State.ActiveShopOfferIds.Add("shop01_delete");
 
             RunCommandResult result = run.BuyShopOffer("shop01_heal");
 
@@ -218,6 +322,43 @@ namespace BalartroLike.Tests
             BattleController battle = run.StartBattle();
             Assert.AreEqual(BattleConfigDatabase.Default.PlayerMaxHp + 6, battle.State.Player.MaxHp);
             Assert.AreEqual(deckCount - 1, battle.State.Hand.Count + battle.State.DrawPile.Count + battle.State.DiscardPile.Count);
+        }
+
+        [Test]
+        public void RunController_ShopContentPoolAddsArtifactAndTalisman()
+        {
+            RunController run = CreateRunAtFirstShop();
+            string artifactOfferId = null;
+            string artifactId = null;
+            string talismanOfferId = null;
+            string talismanId = null;
+            for (int i = 0; i < run.State.ActiveShopOfferIds.Count; i++)
+            {
+                Assert.IsTrue(RunEncounterDatabase.TryGetShopOffer(run.State.ActiveShopOfferIds[i], out RunShopOfferDefinition offer));
+                if (artifactOfferId == null && offer.EffectType == RunEffectType.Artifact)
+                {
+                    artifactOfferId = offer.Id;
+                    artifactId = offer.ContentId;
+                }
+                else if (talismanOfferId == null && offer.EffectType == RunEffectType.Talisman)
+                {
+                    talismanOfferId = offer.Id;
+                    talismanId = offer.ContentId;
+                }
+            }
+
+            Assert.IsNotNull(artifactOfferId);
+            Assert.IsNotNull(talismanOfferId);
+            Assert.IsTrue(run.BuyShopOffer(artifactOfferId).Success);
+            Assert.IsTrue(run.State.ArtifactIds.Contains(artifactId));
+            Assert.IsTrue(run.BuyShopOffer(talismanOfferId).Success);
+            Assert.IsTrue(run.State.TalismanIds.Contains(talismanId));
+            Assert.IsTrue(run.LeaveShop().Success);
+
+            BattleController battle = run.StartBattle();
+
+            Assert.IsTrue(battle.State.Artifacts.Exists(artifact => artifact.Id == artifactId));
+            Assert.IsTrue(battle.State.Talismans.Exists(talisman => talisman.Id == talismanId));
         }
 
         [Test]
@@ -254,9 +395,9 @@ namespace BalartroLike.Tests
             Assert.IsFalse(battle.State.Talismans.Exists(talisman => talisman.Id == "talisman_shield"));
         }
 
-        private static RunController CreateRunAtFirstShop()
+        private static RunController CreateRunAtFirstShop(RunMetaProgressState meta = null)
         {
-            RunController run = RunController.CreatePrototype(1234);
+            RunController run = RunController.CreatePrototype(1234, meta);
             for (int i = 0; i < 3; i++)
             {
                 run.StartBattle();

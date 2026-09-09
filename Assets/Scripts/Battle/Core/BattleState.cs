@@ -20,8 +20,13 @@ namespace BalartroLike.Battle
         public List<CardInstance> DiscardPile { get; }
         public List<CardInstance> Hand { get; }
         public List<BattleEvent> Events { get; }
+        public Dictionary<string, int> HexagramUses { get; }
 
-        public BattleState(int seed, PlayerState player, EnemyState enemy)
+        public BattleState(
+            int seed,
+            PlayerState player,
+            EnemyState enemy,
+            Dictionary<string, int> hexagramUses = null)
         {
             Seed = seed;
             Player = player;
@@ -32,6 +37,7 @@ namespace BalartroLike.Battle
             DiscardPile = new List<CardInstance>();
             Hand = new List<CardInstance>();
             Events = new List<BattleEvent>();
+            HexagramUses = hexagramUses ?? new Dictionary<string, int>();
             DiscardsRemaining = 3;
             DiscardLimit = 3;
             HandLimit = 6;
@@ -64,6 +70,16 @@ namespace BalartroLike.Battle
             }
 
             return false;
+        }
+
+        public int GetHexagramUseCount(string hexagramId)
+        {
+            return HexagramUses.TryGetValue(hexagramId, out int useCount) ? useCount : 0;
+        }
+
+        public void RecordHexagramUse(string hexagramId)
+        {
+            HexagramUses[hexagramId] = GetHexagramUseCount(hexagramId) + 1;
         }
 
         public void AddEvent(BattleEvent battleEvent)

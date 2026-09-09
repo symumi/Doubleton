@@ -20,7 +20,16 @@ namespace BalartroLike.Save
     {
         public int dao_heart;
         public int highest_heaven_tribulation;
+        public int selected_heaven_tribulation;
         public int completed_run_count;
+        public List<HexagramUseSaveData> hexagram_uses = new List<HexagramUseSaveData>();
+    }
+
+    [Serializable]
+    public sealed class HexagramUseSaveData
+    {
+        public string hexagram_id;
+        public int use_count;
     }
 
     [Serializable]
@@ -38,6 +47,7 @@ namespace BalartroLike.Save
         public int dao_heart_reward;
         public int max_hp_bonus;
         public int weapon_power_bonus;
+        public int heaven_tribulation_level;
         public string weapon_id;
         public string active_shop_id;
         public int shop_refresh_count;
@@ -101,6 +111,7 @@ namespace BalartroLike.Save
         public int hp;
         public int shield;
         public int base_power;
+        public int power_bonus;
         public int intent_sequence_index;
         public bool has_intent;
         public EnemyIntentSaveData intent;
@@ -124,6 +135,7 @@ namespace BalartroLike.Save
     {
         public string id;
         public int base_power;
+        public int power_bonus;
         public AttackPattern attack_pattern;
         public int hit_count;
         public bool has_element_affinity;

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>卦锻 · 单局战斗流程图 v0.2</title>
+<style>
+  :root{
+    --gold:#c9a45c; --gold-dim:rgba(201,164,92,.32); --panel:#1d1710; --panel2:#241c12;
+    --line:rgba(201,164,92,.28); --txt:#ede4d0; --sub:#a8977a;
+    --red:#e05245; --green:#5fae6e; --cyan:#5ec8c0; --purple:#a98bd6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:1920px;height:1080px;overflow:hidden;}
+  body{background:#0b0806;font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:var(--txt);}
+  #app{width:1920px;height:1080px;padding:12px 18px 10px;display:flex;flex-direction:column;gap:10px;
+    background:
+      radial-gradient(1200px 500px at 70% -10%, rgba(120,70,30,.25), transparent 60%),
+      radial-gradient(900px 600px at 10% 110%, rgba(40,80,60,.18), transparent 55%),
+      linear-gradient(180deg,#171007,#0b0806 70%);}
+  .panel{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+    border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);min-height:0;}
+  .cap{font-size:12px;letter-spacing:2px;color:var(--gold);font-weight:600;}
+
+  #hd{height:44px;flex:none;display:flex;align-items:center;gap:18px;padding:0 14px;}
+  #logo{font-size:20px;font-weight:800;color:var(--gold);letter-spacing:4px;text-shadow:0 0 14px rgba(201,164,92,.45);}
+  #logo b{color:#f0d9a8;}
+  #crumb{color:var(--sub);font-size:13px;letter-spacing:1px;}
+  #crumb i{color:var(--gold);font-style:normal;}
+  #hdr{display:flex;align-items:center;gap:10px;font-size:13px;margin-left:auto;}
+  .coin{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.35);border:1px solid var(--line);padding:4px 12px;border-radius:20px;color:var(--sub);}
+  .coin b{color:#f0d9a8;}
+
+  #body{flex:1;min-height:0;display:grid;grid-template-columns:1fr 420px;gap:12px;}
+
+  /* ---------- flow ---------- */
+  #flowpanel{padding:10px 16px;display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+  #flow{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;}
+  .node{display:flex;align-items:center;justify-content:center;text-align:center;border-radius:9px;border:1px solid var(--line);
+    background:linear-gradient(180deg,#2a2113,#171009);padding:7px 16px;font-size:12px;line-height:1.45;}
+  .node b{color:#f0d9a8;}
+  .node.start{background:linear-gradient(180deg,#3a2e19,#221a0e);border-color:rgba(201,164,92,.6);color:#f0d9a8;font-weight:800;letter-spacing:2px;font-size:14px;}
+  .node.init{background:linear-gradient(180deg,#242016,#15110a);color:#cfc3a6;}
+  .arrow{width:2px;height:14px;background:linear-gradient(180deg,var(--gold-dim),var(--gold));position:relative;flex:none;}
+  .arrow::after{content:'';position:absolute;bottom:-1px;left:-4px;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--gold);}
+
+  .zone{width:100%;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.18);padding:8px 12px 10px;display:flex;flex-direction:column;gap:7px;}
+  .zone.player{border-color:rgba(94,200,192,.35);background:linear-gradient(180deg,rgba(94,200,192,.06),rgba(0,0,0,.18));}
+  .zone.enemy{border-color:rgba(224,82,69,.35);background:linear-gradient(180deg,rgba(224,82,69,.06),rgba(0,0,0,.18));}
+  .zt{font-size:12px;font-weight:800;letter-spacing:2px;display:flex;align-items:center;gap:8px;}
+  .zone.player .zt{color:#8ff0e6;}
+  .zone.enemy .zt{color:#f0a17a;}
+  .zt small{font-size:10px;font-weight:400;color:var(--sub);letter-spacing:0;}
+
+  .action-row{display:flex;gap:8px;}
+  .pill{flex:1;text-align:center;border-radius:8px;padding:6px 4px;font-size:11px;border:1px solid;line-height:1.35;}
+  .pill.core{color:#241a0e;background:linear-gradient(180deg,#e8c983,#b98a3c);border-color:#f0d9a8;font-weight:800;}
+  .pill.normal{color:#cfc3a6;background:rgba(0,0,0,.28);border-color:rgba(255,255,255,.1);}
+  .pill.end{color:#f0a17a;background:rgba(224,82,69,.12);border-color:rgba(224,82,69,.5);}
+
+  .subflow{display:flex;align-items:stretch;gap:5px;}
+  .step{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+    border-radius:7px;border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.24);padding:5px 4px;font-size:10px;line-height:1.35;color:#cfc3a6;}
+  .step b{color:#f0d9a8;font-size:11px;}
+  .sarr{flex:none;display:flex;align-items:center;color:var(--gold);font-size:14px;}
+  .formula{font-size:10px;color:var(--sub);text-align:center;border-top:1px dashed rgba(255,255,255,.08);padding-top:5px;}
+  .formula b{color:#f0c060;}
+
+  .decide-row{display:flex;align-items:center;gap:10px;}
+  .diamond{width:200px;height:74px;flex:none;display:flex;align-items:center;justify-content:center;text-align:center;
+    background:linear-gradient(180deg,#332713,#1a130b);border:1px solid var(--gold);color:#f0d9a8;font-size:11px;font-weight:700;line-height:1.35;
+    clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);padding:0 26px;}
+  .branch{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--sub);}
+  .branch .tag{font-size:10px;padding:3px 10px;border-radius:10px;border:1px solid;}
+  .tag.yes{color:#7fd08c;border-color:rgba(95,174,110,.55);background:rgba(95,174,110,.12);}
+  .tag.no{color:#f0a17a;border-color:rgba(224,82,69,.55);background:rgba(224,82,69,.12);}
+  .loop{font-size:10px;color:#8fc3e8;border:1px dashed rgba(90,159,208,.55);background:rgba(90,159,208,.08);border-radius:12px;padding:4px 12px;}
+
+  .judge-row{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;}
+  .judge-row .diamond{width:190px;height:70px;font-size:11px;}
+  .results{display:flex;gap:10px;width:100%;}
+  .result{flex:1;border-radius:9px;padding:8px 12px;border:1px solid;display:flex;flex-direction:column;gap:3px;font-size:10px;line-height:1.5;color:var(--sub);}
+  .result b{font-size:13px;}
+  .result.win{border-color:rgba(95,174,110,.55);background:rgba(95,174,110,.08);}
+  .result.win b{color:#7fd08c;}
+  .result.lose{border-color:rgba(224,82,69,.55);background:rgba(224,82,69,.08);}
+  .result.lose b{color:#f0a17a;}
+
+  /* ---------- side ---------- */
+  #side{display:flex;flex-direction:column;gap:10px;min-height:0;}
+  .card{padding:11px 13px;display:flex;flex-direction:column;gap:6px;flex:none;}
+  .card .ct{font-size:11px;color:var(--gold);letter-spacing:2px;font-weight:700;}
+  .card .cv{font-size:11px;color:#cfc3a6;line-height:1.7;}
+  .card .cv b{color:#f0c060;}
+  .card .cv i{color:#8fc3e8;font-style:normal;}
+  .card.formula-card{border-color:rgba(240,192,96,.45);background:linear-gradient(180deg,rgba(240,192,96,.07),rgba(0,0,0,.18));}
+  .card.tribulation{border-color:rgba(169,139,214,.5);background:linear-gradient(180deg,rgba(169,139,214,.08),rgba(0,0,0,.18));}
+  .card.tribulation .ct{color:#c9a8f0;}
+  .legend{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--sub);}
+  .lbar{width:34px;height:0;border-top:2px solid var(--gold);}
+  .lbar.dash{border-top:2px dashed #8fc3e8;}
+  .spacer{flex:1;}
+
+  .foot{text-align:center;font-size:10px;color:#6a5c48;letter-spacing:1px;flex:none;line-height:1;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hd" class="panel">
+    <div id="logo">《<b>卦锻</b>》</div>
+    <div id="crumb">单局战斗流程图 · <i>玩家回合 → 敌方回合 → 胜负判定</i></div>
+    <div id="hdr">
+      <div class="coin">灵力 <b>每手 1</b></div>
+      <div class="coin">手牌上限 <b>6</b></div>
+      <div class="coin">附魔槽 <b>3</b></div>
+    </div>
+  </div>
+
+  <div id="body">
+    <div class="panel" id="flowpanel">
+      <div id="flow">
+        <div class="node start">战斗开始</div>
+        <div class="arrow"></div>
+        <div class="node init">初始化：抽手牌至 <b>6</b> ｜ 灵力回满 ｜ 敌人生成「意图」</div>
+        <div class="arrow"></div>
+
+        <div class="zone player">
+          <div class="zt">玩家回合 <small>观察敌人意图 → 决定本手怎么摆卦</small></div>
+          <div class="action-row">
+            <div class="pill core">出卦（核心）</div>
+            <div class="pill normal">弃牌换牌</div>
+            <div class="pill normal">使用符箓</div>
+            <div class="pill end">结束回合</div>
+          </div>
+          <div class="subflow">
+            <div class="step"><b>① 选内卦</b>下卦 · 定行为/五行</div>
+            <div class="sarr">→</div>
+            <div class="step"><b>② 选外卦</b>上卦 · 定修饰</div>
+            <div class="sarr">→</div>
+            <div class="step"><b>③ 合成卦象</b>64 卦之一</div>
+            <div class="sarr">→</div>
+            <div class="step"><b>④ 伤害结算</b>公式计算</div>
+            <div class="sarr">→</div>
+            <div class="step"><b>⑤ 触发效果</b>附魔/状态/资源</div>
+            <div class="sarr">→</div>
+            <div class="step"><b>⑥ 灵力 -1</b>每手消耗 1 点</div>
+          </div>
+          <div class="formula">伤害 = <b>(武器力道 + 卦力)</b> × <b>卦倍率</b> × <b>五行克制</b> × <b>法宝乘区</b> × <b>会心</b></div>
+          <div class="decide-row">
+            <div class="diamond">灵力 &gt; 0<br>且手牌可成卦？</div>
+            <div class="branch"><span class="tag yes">是</span><span class="loop">↺ 继续出卦</span></div>
+            <div class="branch"><span class="tag no">否</span><span>结束回合</span></div>
+          </div>
+        </div>
+
+        <div class="arrow"></div>
+        <div class="zone enemy">
+          <div class="zt">敌方回合 <small>按「意图」行动</small></div>
+          <div class="subflow">
+            <div class="step"><b>① 执行意图</b>攻击 / 上状态 / 改变环境</div>
+            <div class="sarr">→</div>
+            <div class="step"><b>② 结算状态</b>灼烧 / 寒滞 / 易伤…</div>
+            <div class="sarr">→</div>
+            <div class="step"><b>③ 玩家受伤</b>护盾先于气血结算</div>
+          </div>
+        </div>
+
+        <div class="arrow"></div>
+        <div class="judge-row">
+          <div class="diamond">敌人 HP ≤ 0？</div>
+          <div class="branch"><span class="tag yes">是</span><span>战斗胜利</span></div>
+          <div class="branch"><span class="tag no">否</span><span>继续判定</span></div>
+          <div class="diamond">玩家 HP ≤ 0？</div>
+          <div class="branch"><span class="tag yes">是</span><span>战斗失败</span></div>
+          <div class="branch"><span class="tag no">否</span><span class="loop">↺ 下一回合 · 回到玩家回合</span></div>
+        </div>
+
+        <div class="arrow"></div>
+        <div class="results">
+          <div class="result win"><b>胜利结算</b>灵石 / 符箓 / 图鉴解锁 / 法宝 → 返回路线页；渡劫战则晋升下一境界</div>
+          <div class="result lose"><b>失败结算</b>本局构筑结束；保留图鉴与少量道行，可重新开始</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="side">
+      <div class="panel card formula-card">
+        <div class="ct">— 伤害公式 —</div>
+        <div class="cv"><b>总伤害</b> = (武器力道 + 卦力) × 卦倍率 × 五行系数 × 法宝乘区 × 会心<br>
+          <i>五行：克制 ×1.5 ｜ 被克 ×0.67 ｜ 同属 ×1.0（敌人同属性 ×0.85）</i></div>
+      </div>
+
+      <div class="panel card">
+        <div class="ct">— 资源与限制 —</div>
+        <div class="cv">
+          每手消耗 <b>1 灵力</b>，每手需 <b>2 张手牌</b>（内卦 + 外卦）<br>
+          手牌上限 <b>6</b> ｜ 每回合回 <b>2 灵力</b> ｜ 附魔槽 <b>3</b><br>
+          弃牌换牌有次数限制；符箓为一次性消耗品
+        </div>
+      </div>
+
+      <div class="panel card">
+        <div class="ct">— 关键判定 —</div>
+        <div class="cv">
+          出卦：必须有内卦 + 外卦两张牌<br>
+          胜利：敌人 HP ≤ 0<br>
+          失败：玩家 HP ≤ 0<br>
+          回合循环：双方都未倒下 → 回到玩家回合
+        </div>
+      </div>
+
+      <div class="panel card tribulation">
+        <div class="ct">— 渡劫战特殊规则 —</div>
+        <div class="cv">
+          每境界第三关为 <b>渡劫（Boss）</b>，附带规则改造<br>
+          渡劫胜利 → 晋升下一境界<br>
+          渡劫失败 → 本局结束（保留图鉴与少量道行）
+        </div>
+      </div>
+
+      <div class="panel card">
+        <div class="ct">— 图例 —</div>
+        <div class="legend"><span class="lbar"></span>正常流程（实线）</div>
+        <div class="legend"><span class="lbar dash"></span>回合循环（虚线 ↺）</div>
+      </div>
+      <div class="spacer"></div>
+    </div>
+  </div>
+
+  <div class="foot">核心玩法 · 单局战斗流程图 v0.2 ｜ 依据 docs/design/核心玩法策划.md §2.2 / §5 ｜ 供评审，非最终视觉</div>
+</div>
+</body>
+</html>

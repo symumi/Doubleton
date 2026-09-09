@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>卦锻 · 修行历劫关卡路线原型 v0.2</title>
+<style>
+  :root{
+    --gold:#c9a45c; --gold-dim:rgba(201,164,92,.32); --panel:#1d1710; --panel2:#241c12;
+    --line:rgba(201,164,92,.28); --txt:#ede4d0; --sub:#a8977a;
+    --red:#e05245; --green:#5fae6e; --cyan:#5ec8c0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:1920px;height:1080px;overflow:hidden;}
+  body{background:#0b0806;font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:var(--txt);}
+  #app{width:1920px;height:1080px;padding:12px 18px 10px;display:flex;flex-direction:column;gap:10px;
+    background:
+      radial-gradient(1200px 500px at 70% -10%, rgba(120,70,30,.25), transparent 60%),
+      radial-gradient(900px 600px at 10% 110%, rgba(40,80,60,.18), transparent 55%),
+      linear-gradient(180deg,#171007,#0b0806 70%);}
+  .panel{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+    border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);min-height:0;}
+  .cap{font-size:12px;letter-spacing:2px;color:var(--gold);font-weight:600;}
+
+  #hd{height:42px;flex:none;display:flex;align-items:center;gap:18px;padding:0 14px;}
+  #logo{font-size:20px;font-weight:800;color:var(--gold);letter-spacing:4px;text-shadow:0 0 14px rgba(201,164,92,.45);}
+  #logo b{color:#f0d9a8;}
+  #crumb{color:var(--sub);font-size:13px;letter-spacing:1px;}
+  #crumb i{color:var(--gold);font-style:normal;}
+  #hdr{display:flex;align-items:center;gap:10px;font-size:14px;margin-left:auto;}
+  .coin{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.35);border:1px solid var(--line);padding:4px 12px;border-radius:20px;}
+  .coin .ic{color:var(--cyan);}
+  .coin b{color:#f0d9a8;}
+
+  #body{flex:1;min-height:0;display:grid;grid-template-columns:1fr 360px;gap:12px;}
+
+  /* map */
+  #mappanel{padding:10px 14px;display:flex;flex-direction:column;gap:8px;min-height:0;overflow:hidden;}
+  #maphead{height:34px;flex:none;display:flex;align-items:center;gap:12px;}
+  #maphead .sub{font-size:11px;color:var(--sub);}
+  #maphead .rule{margin-left:auto;display:flex;gap:6px;}
+  .rtag{font-size:10px;padding:3px 10px;border-radius:12px;border:1px solid;color:#f0c060;border-color:rgba(240,192,96,.5);background:rgba(240,192,96,.12);}
+  .rtag.red{color:#f0a17a;border-color:rgba(224,122,69,.5);background:rgba(224,122,69,.12);}
+  .rtag.purple{color:#c9a8f0;border-color:rgba(169,139,214,.55);background:rgba(169,139,214,.12);}
+  #map{flex:1;min-height:0;position:relative;}
+  #map svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+  .nodewrap{position:absolute;transform:translate(-50%,-50%);}
+  .node{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;
+    border:2px solid;background:radial-gradient(circle at 40% 30%,#2d2416,#15100a 75%);position:relative;z-index:2;}
+  .node.done{color:#f0d9a8;border-color:var(--gold);box-shadow:0 0 12px rgba(201,164,92,.3);}
+  .node.current{width:66px;height:66px;color:#241a0e;border-color:#f0d9a8;background:radial-gradient(circle at 40% 30%,#f0d9a8,#b98a3c 75%);
+    box-shadow:0 0 0 6px rgba(201,164,92,.12),0 0 24px rgba(201,164,92,.7);}
+  .node.locked{color:#6a5c48;border-color:rgba(255,255,255,.12);background:#14100a;}
+  .node.boss{width:72px;height:72px;font-size:22px;color:#f0a17a;border-color:rgba(224,82,69,.75);box-shadow:0 0 16px rgba(224,82,69,.3);}
+  .node.boss.locked{color:#7a5148;border-color:rgba(224,82,69,.28);box-shadow:none;}
+  .node.current.boss{color:#241a0e;background:radial-gradient(circle at 40% 30%,#ffb08c,#c04a35 75%);border-color:#ffd0b8;}
+  .nlabel{position:absolute;left:50%;transform:translateX(-50%);width:158px;text-align:center;z-index:1;}
+  .nlabel.below{top:48px;}
+  .nlabel.above{bottom:48px;}
+  .nname{font-size:12px;font-weight:700;color:#cfc3a6;line-height:1.3;white-space:nowrap;}
+  .ntype{font-size:10px;color:var(--sub);line-height:1.5;white-space:nowrap;}
+  .nstatus{font-size:9px;letter-spacing:1px;margin-top:1px;}
+  .done .nstatus,.nstatus.done{color:#7fd08c;}
+  .nstatus.current{color:#f0d9a8;font-weight:700;}
+  .nstatus.locked{color:#6a5c48;}
+  .nodewrap.is-current .nlabel{border:1px solid rgba(201,164,92,.4);background:rgba(0,0,0,.35);border-radius:8px;padding:4px 6px;}
+  .nodewrap.is-current .nname{color:#f0d9a8;}
+  #mapfoot{height:42px;flex:none;display:flex;align-items:center;gap:18px;border-top:1px solid rgba(255,255,255,.06);padding-top:6px;font-size:10px;color:var(--sub);}
+  .lg{display:flex;align-items:center;gap:5px;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  #mapfoot .note{margin-left:auto;color:#8a7a5e;}
+
+  /* sidebar */
+  #side{display:flex;flex-direction:column;gap:10px;min-height:0;}
+  #cur{padding:12px;display:flex;flex-direction:column;gap:7px;flex:none;}
+  #cur .titlerow{display:flex;align-items:center;gap:8px;}
+  #cur .title{font-size:21px;font-weight:800;color:#f0d9a8;letter-spacing:2px;}
+  .badge{font-size:10px;padding:2px 9px;border-radius:10px;border:1px solid;}
+  .badge.elite{color:#f0c060;border-color:rgba(240,192,96,.55);background:rgba(240,192,96,.12);}
+  .badge.realm{color:#8ff0e6;border-color:rgba(94,200,192,.5);background:rgba(94,200,192,.12);}
+  .enemyrow{display:flex;gap:10px;align-items:center;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:7px 9px;}
+  .enemyrow .ico{width:46px;height:46px;flex:none;border-radius:9px;background:radial-gradient(circle at 40% 30%,#2a2416,#15100a 75%);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:26px;}
+  .enemyrow .et{font-size:12px;line-height:1.6;color:var(--sub);}
+  .enemyrow .et b{display:block;font-size:15px;color:var(--txt);}
+  .wx{font-size:11px;padding:1px 8px;border-radius:10px;border:1px solid;}
+  .wx.wood{color:#9fd08c;border-color:rgba(111,174,92,.5);background:rgba(111,174,92,.12);}
+  .kv{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);}
+  .kv b{color:var(--txt);}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;}
+  .chip{font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid;}
+  .chip.good{color:#9fd08c;border-color:rgba(111,174,92,.5);background:rgba(111,174,92,.12);}
+  .chip.bad{color:#f0a17a;border-color:rgba(224,122,69,.5);background:rgba(224,122,69,.12);}
+  .stars{color:#f0c060;font-size:12px;letter-spacing:2px;}
+  .tribulation{font-size:10px;color:#f0c060;line-height:1.6;border:1px dashed rgba(240,192,96,.45);background:rgba(240,192,96,.08);border-radius:8px;padding:5px 8px;}
+  .tribulation b{color:#ffd23e;}
+  #btnStart{margin-top:2px;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 0;border-radius:10px;font-size:16px;letter-spacing:3px;font-weight:800;
+    color:#241a0e;background:linear-gradient(180deg,#e8c983,#b98a3c);border:1px solid #f0d9a8;box-shadow:0 0 14px rgba(201,164,92,.4);}
+  #btnStart small{font-size:10px;letter-spacing:1px;font-weight:600;}
+
+  #runstate{padding:12px;display:flex;flex-direction:column;gap:6px;flex:1;min-height:0;overflow:hidden;}
+  .srow{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);border-bottom:1px dashed rgba(255,255,255,.05);padding-bottom:4px;}
+  .srow b{color:var(--txt);}
+  .rules{font-size:10px;color:var(--sub);line-height:1.75;padding-left:12px;position:relative;}
+  .rules::before{content:'◆';position:absolute;left:0;color:var(--gold);font-size:8px;top:2px;}
+  .rules b{color:#f0c060;}
+  #runstate .cap2{font-size:11px;color:var(--gold);letter-spacing:2px;margin-top:4px;}
+  .ladder{display:flex;align-items:center;justify-content:center;gap:3px;padding:3px 0;}
+  .rn{width:54px;text-align:center;font-size:11px;color:#6a5c48;border:1px solid rgba(255,255,255,.08);border-radius:7px;padding:3px 0;background:rgba(0,0,0,.18);line-height:1.25;}
+  .rn small{display:block;font-size:8px;color:#6a5c48;}
+  .rn.done{color:#f0d9a8;border-color:rgba(201,164,92,.5);}
+  .rn.done small{color:#7fd08c;}
+  .rn.cur{color:#241a0e;background:linear-gradient(180deg,#e8c983,#b98a3c);border-color:#f0d9a8;font-weight:800;box-shadow:0 0 10px rgba(201,164,92,.45);}
+  .rn.cur small{color:#5a3f16;}
+  .arr{font-size:9px;color:var(--gold-dim);}
+  #runstate .footnote{margin-top:auto;font-size:10px;color:#6a5c48;line-height:1.6;border-top:1px solid rgba(255,255,255,.06);padding-top:6px;}
+
+  .foot{text-align:center;font-size:10px;color:#6a5c48;letter-spacing:1px;flex:none;line-height:1;}
+</style>
+  <link rel="stylesheet" href="./visual-style.css">
+</head>
+<body>
+<div id="app">
+  <div id="hd" class="panel">
+    <div id="logo">《<b>卦锻</b>》</div>
+    <div id="crumb">修行历劫 · <i>筑基期</i> ｜ 已通关 4 / 9 ｜ 下一关：筑基后期</div>
+    <div id="hdr">
+      <div class="coin"><span class="ic">◆</span><b>灵石 128</b></div>
+      <div class="coin"><span class="ic">◈</span>道行 340</div>
+      <div class="coin">天劫 <b>0</b></div>
+    </div>
+  </div>
+
+  <div id="body">
+    <div class="panel" id="mappanel">
+      <div id="maphead">
+        <div class="cap">— 修行路线 · 九关 —</div>
+        <div class="sub">境界只能顺序突破：通关当前关 → 渡劫 → 晋升下一境界</div>
+        <div class="rule"><span class="rtag">顺序推进</span><span class="rtag red">不可跳关</span><span class="rtag purple">渡劫晋升</span></div>
+      </div>
+      <div id="map">
+        <svg id="roadsvg" viewBox="0 0 1484 870" preserveAspectRatio="none"></svg>
+      </div>
+      <div id="mapfoot">
+        <span class="lg"><span class="dot" style="background:#c9a45c"></span>已通关</span>
+        <span class="lg"><span class="dot" style="background:#f0d9a8;box-shadow:0 0 6px #f0d9a8"></span>当前挑战</span>
+        <span class="lg"><span class="dot" style="background:#3a3125"></span>未解锁</span>
+        <span class="lg"><span class="dot" style="background:#c04a35"></span>渡劫（Boss）</span>
+        <span class="note">渡劫失败不会清空图鉴与道行，但本局构筑结束</span>
+      </div>
+    </div>
+
+    <div id="side">
+      <div class="panel" id="cur">
+        <div class="cap">— 当前关卡 · 筑基期 —</div>
+        <div class="titlerow"><div class="title">筑基后期</div><span class="badge elite">精英</span><span class="badge realm">第二境</span></div>
+        <div class="enemyrow">
+          <div class="ico">👺</div>
+          <div class="et"><b>木魈 <span class="wx wood">五行 · 木</span></b>气血 48 ｜ 意图：藤缚（施加虚弱 + 攻击 6）</div>
+        </div>
+        <div class="kv"><span>弱点 / 抗性</span><span><b style="color:#e6ddc0">金 ×1.5</b> ｜ 同属 ×0.85</span></div>
+        <div class="chips">
+          <span class="chip good">推荐：乾 / 兑 内卦</span>
+          <span class="chip bad">避免：火卦（木生火）</span>
+        </div>
+        <div class="kv"><span>通关奖励</span><b>灵石 42 · 概率符箓</b></div>
+        <div class="kv"><span>难度预估</span><span class="stars">★★★☆☆</span></div>
+        <div class="tribulation">⚡ 本境终点：<b>金丹渡劫</b> ｜ 击败雷兽 → 晋升金丹期</div>
+        <div id="btnStart">开始战斗 <small>→ 进入战斗界面</small></div>
+      </div>
+
+      <div class="panel" id="runstate">
+        <div class="cap">— 修行状态 —</div>
+        <div class="srow"><span>当前境界</span><b>筑基后期</b></div>
+        <div class="srow"><span>气血</span><b>24 / 30</b></div>
+        <div class="srow"><span>护盾</span><b>5</b></div>
+        <div class="srow"><span>灵石</span><b>128</b></div>
+        <div class="srow"><span>法宝</span><b>4 / 5</b></div>
+        <div class="srow"><span>符箓 / 牌组</span><b>3 ｜ 30 张</b></div>
+
+        <div class="cap2">— 境界进度 —</div>
+        <div class="ladder">
+          <div class="rn done">炼气<small>✓ 已渡</small></div>
+          <div class="arr">渡</div>
+          <div class="rn cur">筑基<small>当前</small></div>
+          <div class="arr">渡</div>
+          <div class="rn">金丹<small>未至</small></div>
+          <div class="arr">渡</div>
+          <div class="rn">元婴<small>未至</small></div>
+        </div>
+
+        <div class="cap2">— 推进规则 —</div>
+        <div class="rules">境界只能顺序突破，当前关未通过<b>无法进入下一关</b>。</div>
+        <div class="rules">每境终点为<b>渡劫（Boss）</b>，附带规则改造。</div>
+        <div class="rules">渡劫失败不会清空图鉴与道行，但本局构筑结束。</div>
+        <div class="rules">通关<b>元婴渡劫</b>后结算道行，并解锁更高天劫。</div>
+
+        <div class="footnote">提示：每关开战前可返回坊市调整法宝与牌组。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">核心玩法 · 修行历劫关卡路线 UI 原型 v0.2 · 墨狱异志录视觉版 ｜ 依据 docs/design/核心玩法策划.md §2.1 / §6.3 / docs/design/视觉设计风格.md ｜ 供评审</div>
+</div>
+
+<script>
+const NODES = [
+  {realm:'炼气期', name:'炼气一层', type:'普通', enemy:'山魈', el:'土', state:'done', reward:'灵石 25'},
+  {realm:'炼气期', name:'炼气圆满', type:'精英', enemy:'石傀', el:'土', state:'done', reward:'灵石 35 · 符箓'},
+  {realm:'炼气期', name:'筑基渡劫', type:'渡劫', enemy:'玄水蛟', el:'水', state:'done', note:'晋升筑基', reward:'法宝 + 灵石 60'},
+  {realm:'筑基期', name:'筑基初期', type:'普通', enemy:'火鼠', el:'火', state:'done', reward:'灵石 28'},
+  {realm:'筑基期', name:'筑基后期', type:'精英', enemy:'木魈', el:'木', state:'current', reward:'灵石 42 · 符箓'},
+  {realm:'筑基期', name:'金丹渡劫', type:'渡劫', enemy:'雷兽', el:'木', state:'locked', note:'晋升金丹', reward:'法宝 + 灵石 80'},
+  {realm:'金丹期', name:'金丹初期', type:'普通', enemy:'土偶', el:'土', state:'locked', reward:'灵石 32'},
+  {realm:'金丹期', name:'金丹后期', type:'精英', enemy:'金甲将', el:'金', state:'locked', reward:'灵石 50 · 符箓'},
+  {realm:'金丹期', name:'元婴渡劫', type:'渡劫', enemy:'烛龙', el:'火', state:'locked', note:'晋升元婴', reward:'通关 · 道行结算'}
+];
+
+const map = document.getElementById('map');
+const svg = document.getElementById('roadsvg');
+
+function render() {
+  const W = map.clientWidth, H = map.clientHeight;
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  const pts = NODES.map((n, i) => ({
+    x: 85 + i * ((W - 170) / 8),
+    y: H / 2 + 128 * Math.sin(i * Math.PI / 2)
+  }));
+  const smooth = (list) => {
+    if (!list.length) return '';
+    let d = 'M ' + list[0].x + ' ' + list[0].y;
+    for (let i = 0; i < list.length - 1; i++) {
+      const a = list[i], b = list[i + 1], mx = (a.x + b.x) / 2;
+      d += ' C ' + mx + ' ' + a.y + ', ' + mx + ' ' + b.y + ', ' + b.x + ' ' + b.y;
+    }
+    return d;
+  };
+  const currentIndex = NODES.findIndex(n => n.state === 'current');
+  svg.innerHTML =
+    '<path d="' + smooth(pts) + '" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="10" stroke-linecap="round"/>' +
+    '<path d="' + smooth(pts.slice(0, currentIndex + 1)) + '" fill="none" stroke="url(#goldline)" stroke-width="10" stroke-linecap="round"/>' +
+    '<defs><linearGradient id="goldline" x1="0" y1="0" x2="1" y2="0">' +
+      '<stop offset="0" stop-color="#8a6a2e"/><stop offset="1" stop-color="#e8c983"/>' +
+    '</linearGradient></defs>';
+
+  const old = map.querySelectorAll('.nodewrap');
+  old.forEach(el => el.remove());
+  NODES.forEach((n, i) => {
+    const p = pts[i];
+    const isTribulation = n.type === '渡劫';
+    const icon = n.state === 'done' ? '✓' : n.state === 'current' ? '▶' : (isTribulation ? '劫' : '锁');
+    const cls = ['node', n.state, isTribulation ? 'boss' : ''].join(' ');
+    let status;
+    if (n.state === 'done') status = isTribulation ? '已渡劫 · ' + n.note : '已通关';
+    else if (n.state === 'current') status = '当前挑战 · ' + n.reward;
+    else status = '未解锁' + (isTribulation ? ' · ' + n.note : '');
+    const labelPos = p.y <= H / 2 ? 'below' : 'above';
+    const wrap = document.createElement('div');
+    wrap.className = 'nodewrap' + (n.state === 'current' ? ' is-current' : '');
+    wrap.style.left = p.x + 'px';
+    wrap.style.top = p.y + 'px';
+    wrap.innerHTML =
+      '<div class="' + cls + '">' + icon + '</div>' +
+      '<div class="nlabel ' + labelPos + '">' +
+        '<div class="nname">' + n.realm + ' · ' + n.name + '</div>' +
+        '<div class="ntype">' + n.type + ' ｜ ' + n.enemy + '（' + n.el + '）</div>' +
+        '<div class="nstatus ' + n.state + '">' + status + '</div>' +
+      '</div>';
+    map.appendChild(wrap);
+  });
+}
+render();
+window.addEventListener('resize', render);
+</script>
+</body>
+</html>

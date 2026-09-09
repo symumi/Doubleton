@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>卦锻 · 坊市商店界面原型 v0.1</title>
+<style>
+  :root{
+    --gold:#c9a45c; --gold-dim:rgba(201,164,92,.32); --panel:#1d1710; --panel2:#241c12;
+    --line:rgba(201,164,92,.28); --txt:#ede4d0; --sub:#a8977a;
+    --red:#e05245; --green:#5fae6e; --cyan:#5ec8c0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:1920px;height:1080px;overflow:hidden;}
+  body{background:#0b0806;font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:var(--txt);}
+  #app{width:1920px;height:1080px;padding:12px 18px 10px;display:flex;flex-direction:column;gap:10px;
+    background:
+      radial-gradient(1200px 500px at 70% -10%, rgba(120,70,30,.25), transparent 60%),
+      radial-gradient(900px 600px at 10% 110%, rgba(40,80,60,.18), transparent 55%),
+      linear-gradient(180deg,#171007,#0b0806 70%);}
+  .panel{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+    border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);min-height:0;}
+  .cap{font-size:12px;letter-spacing:2px;color:var(--gold);font-weight:600;}
+
+  /* header */
+  #hd{height:42px;flex:none;display:flex;align-items:center;gap:18px;padding:0 14px;}
+  #logo{font-size:20px;font-weight:800;color:var(--gold);letter-spacing:4px;text-shadow:0 0 14px rgba(201,164,92,.45);}
+  #logo b{color:#f0d9a8;}
+  #crumb{color:var(--sub);font-size:13px;letter-spacing:1px;}
+  #crumb i{color:var(--gold);font-style:normal;}
+  #hdr{display:flex;align-items:center;gap:10px;font-size:14px;margin-left:auto;}
+  .coin{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.35);border:1px solid var(--line);padding:4px 12px;border-radius:20px;}
+  .coin .ic{color:var(--cyan);}
+  .coin b{color:#f0d9a8;}
+
+  /* body */
+  #body{flex:1;min-height:0;display:grid;grid-template-columns:1fr 340px;gap:12px;}
+
+  /* shop */
+  #shop{padding:10px 14px;display:flex;flex-direction:column;gap:8px;min-height:0;overflow:hidden;}
+  #shophead{display:flex;align-items:center;gap:12px;flex:none;height:30px;}
+  #shophead .sub{font-size:11px;color:var(--sub);}
+  #shophead .right{margin-left:auto;font-size:11px;color:var(--sub);}
+  #shophead .right b{color:var(--gold);}
+  #grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:10px;}
+
+  .item{border:1px solid var(--line);border-radius:10px;background:linear-gradient(180deg,#2a2113,#171009);
+    display:flex;flex-direction:column;padding:10px 12px;gap:6px;position:relative;overflow:hidden;min-height:0;}
+  .item.selected{border-color:var(--gold);box-shadow:0 0 18px rgba(201,164,92,.28), inset 0 0 24px rgba(201,164,92,.06);}
+  .item.sold{filter:grayscale(.75);opacity:.55;}
+  .art{height:108px;flex:none;border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;
+    background:radial-gradient(circle at 50% 35%, rgba(201,164,92,.16), transparent 65%), linear-gradient(180deg,#241b10,#14100a);
+    border:1px solid rgba(255,255,255,.05);}
+  .art .medal{width:66px;height:66px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:30px;font-weight:800;color:var(--gold);background:radial-gradient(circle at 40% 30%, #3b2e19, #1a130b 75%);
+    border:1px solid rgba(201,164,92,.55);box-shadow:0 0 18px rgba(201,164,92,.25);}
+  .art .tag{position:absolute;top:7px;left:8px;font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid;}
+  .art .rare{position:absolute;top:7px;right:8px;font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid;}
+  .r-common{color:#b8b0a0;border-color:rgba(184,176,160,.5);background:rgba(184,176,160,.12);}
+  .r-spirit{color:#8ff0e6;border-color:rgba(94,200,192,.55);background:rgba(94,200,192,.12);}
+  .r-mystic{color:#c9a8f0;border-color:rgba(169,139,214,.55);background:rgba(169,139,214,.12);}
+  .r-earth{color:#f0c060;border-color:rgba(240,192,96,.55);background:rgba(240,192,96,.12);}
+  .r-heaven{color:#ff8c7a;border-color:rgba(224,82,69,.55);background:rgba(224,82,69,.12);}
+  .nm{font-size:17px;font-weight:800;letter-spacing:1px;flex:none;}
+  .nm small{font-size:11px;color:var(--sub);font-weight:400;margin-left:8px;letter-spacing:0;}
+  .effect{flex:1;font-size:12px;color:#cfc3a6;line-height:1.6;min-height:0;overflow:hidden;}
+  .effect b{color:#f0a17a;}
+  .effect i{color:#8fc3e8;font-style:normal;}
+  .synergy{flex:none;font-size:10px;color:var(--sub);background:rgba(0,0,0,.25);border:1px dashed rgba(255,255,255,.08);border-radius:6px;padding:3px 8px;}
+  .synergy b{color:var(--gold);}
+  .buyrow{flex:none;display:flex;align-items:center;gap:8px;}
+  .price{margin-right:auto;font-size:14px;color:#f0d9a8;font-weight:700;}
+  .price .ic{color:var(--cyan);font-size:12px;}
+  .buy{font-size:12px;font-weight:700;letter-spacing:2px;padding:6px 18px;border-radius:8px;border:1px solid var(--gold);color:#241a0e;
+    background:linear-gradient(180deg,#e8c983,#b98a3c);cursor:pointer;}
+  .buy.dark{background:linear-gradient(180deg,#33291a,#241b10);color:var(--txt);border-color:var(--line);}
+  .buy.disabled{background:#1b1610;color:#6a5c48;border-color:rgba(255,255,255,.08);cursor:default;}
+  .soldmark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#d8cfae;
+    background:rgba(10,8,5,.45);letter-spacing:4px;}
+
+  /* sidebar */
+  #side{display:flex;flex-direction:column;gap:10px;min-height:0;}
+  #wallet{padding:10px 12px;display:flex;flex-direction:column;gap:7px;flex:none;}
+  .bigcoin{display:flex;align-items:baseline;gap:8px;}
+  .bigcoin .ic{color:var(--cyan);font-size:16px;}
+  .bigcoin b{font-size:30px;color:#f0d9a8;line-height:1;}
+  .bigcoin span{font-size:11px;color:var(--sub);}
+  .sbtn{display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 0;border-radius:8px;font-size:12px;letter-spacing:2px;font-weight:700;border:1px solid;}
+  #btnRefresh{background:linear-gradient(180deg,#33291a,#241b10);color:var(--txt);border-color:var(--line);}
+  #btnRefresh small{font-size:10px;color:var(--sub);letter-spacing:0;}
+  #btnLeave{background:linear-gradient(180deg,#4a241f,#331713);color:#f0a17a;border-color:rgba(224,122,69,.55);}
+
+  #deck{padding:10px 12px;display:flex;flex-direction:column;gap:6px;flex:1;min-height:0;overflow:hidden;}
+  .deckline{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--sub);}
+  .deckline .g{width:26px;flex:none;color:var(--txt);}
+  .deckline .bar{flex:1;height:8px;border-radius:5px;background:#0e0b08;border:1px solid rgba(255,255,255,.06);overflow:hidden;}
+  .deckline .bar i{display:block;height:100%;background:linear-gradient(90deg,#7a5a2a,#c9a45c);}
+  .deckline .n{width:20px;text-align:right;color:var(--txt);}
+  .deckline .el{width:16px;font-size:10px;}
+
+  #owned{padding:10px 12px;display:flex;flex-direction:column;gap:5px;flex:none;height:304px;overflow:hidden;}
+  .orow{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--sub);background:rgba(0,0,0,.18);border-radius:6px;padding:3px 8px;}
+  .orow .ic{width:22px;height:22px;flex:none;border-radius:6px;background:linear-gradient(160deg,#3a2c18,#241a0e);border:1px solid var(--gold-dim);
+    display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:12px;}
+  .orow b{color:var(--txt);}
+  .orow .r{margin-left:auto;color:var(--gold);font-size:10px;}
+  .gap2{height:2px;flex:none;}
+
+  /* preview */
+  #preview{flex:none;padding:8px 12px;display:flex;flex-direction:column;gap:4px;border-color:rgba(94,200,192,.35);}
+  #preview .t{font-size:11px;color:var(--cyan);letter-spacing:1px;}
+  #preview .calc{font-size:11px;color:var(--sub);line-height:1.6;}
+  #preview .calc b{color:#ffd23e;font-size:15px;}
+  #preview .calc s{color:#7a6c54;}
+
+  .foot{text-align:center;font-size:10px;color:#6a5c48;letter-spacing:1px;flex:none;line-height:1;}
+</style>
+  <link rel="stylesheet" href="./visual-style.css">
+</head>
+<body>
+<div id="app">
+
+  <div id="hd" class="panel">
+    <div id="logo">《<b>卦锻</b>》</div>
+    <div id="crumb">历劫 · <i>第二境</i> ｜ 坊市 · 今日货架 ｜ 下一战：镇关 6/9</div>
+    <div id="hdr">
+      <div class="coin"><span class="ic">◆</span><b>灵石 128</b></div>
+      <div class="coin"><span class="ic">◈</span>刷新 1 / 2</div>
+      <div class="coin">回合外</div>
+    </div>
+  </div>
+
+  <div id="body">
+    <div class="panel" id="shop">
+      <div id="shophead">
+        <div class="cap">— 坊市 · 今日货架 —</div>
+        <div class="sub">每次刷新商品不同；价格随天劫难度上浮</div>
+        <div class="right">已购 <b>1</b> / 5 ｜ 灵石 <b>128</b></div>
+      </div>
+
+      <div id="grid">
+        <div class="item selected">
+          <div class="art"><span class="tag r-spirit">法宝</span><span class="rare r-spirit">灵品</span><div class="medal">火</div></div>
+          <div class="nm">火德星君令 <small>法宝 · 被动</small></div>
+          <div class="effect">打出<b>火属性</b>卦象时，本手卦力 <b>×1.5</b>。<br><i>“火曰炎上，离明相续。”</i></div>
+          <div class="synergy">联动预览：与「噬嗑牙」同场时，灼烧流伤害提升 <b>+38%</b></div>
+          <div class="buyrow"><div class="price"><span class="ic">◆</span> 45</div><div class="buy">购买</div></div>
+        </div>
+
+        <div class="item">
+          <div class="art"><span class="tag r-earth">法宝</span><span class="rare r-earth">地品</span><div class="medal" style="color:#f0c060">牙</div></div>
+          <div class="nm">噬嗑牙 <small>法宝 · 被动</small></div>
+          <div class="effect">「噬嗑」卦的连击每段附加 <b>1 层灼烧</b>。<br><i>“颐中有物，啮而后合。”</i></div>
+          <div class="synergy">与「火德星君令」构成 <b>火·连击</b> 核心</div>
+          <div class="buyrow"><div class="price"><span class="ic">◆</span> 70</div><div class="buy">购买</div></div>
+        </div>
+
+        <div class="item">
+          <div class="art"><span class="tag r-spirit">符箓</span><span class="rare r-spirit">灵品</span><div class="medal" style="color:#8ff0e6">星</div></div>
+          <div class="nm">观星符 <small>符箓 · 消耗</small></div>
+          <div class="effect">查看牌堆顶 <b>5 张</b>，将其中 1 张加入手牌，其余放回。<br><i>一局一次，稳拿关键卦。</i></div>
+          <div class="synergy">适合在 Boss 战前检索 <b>乾 / 兑</b> 凑金卦</div>
+          <div class="buyrow"><div class="price"><span class="ic">◆</span> 18</div><div class="buy">购买</div></div>
+        </div>
+
+        <div class="item">
+          <div class="art"><span class="tag r-spirit">符箓</span><span class="rare r-spirit">灵品</span><div class="medal" style="color:#8ff0e6">逆</div></div>
+          <div class="nm">逆转符 <small>符箓 · 消耗</small></div>
+          <div class="effect">本手可 <b>交换内 / 外卦顺序</b>：把「否」变「泰」，或把「未济」变「既济」。</div>
+          <div class="synergy">顺序即卦义 —— 一张符让你 <b>反悔一次</b></div>
+          <div class="buyrow"><div class="price"><span class="ic">◆</span> 15</div><div class="buy">购买</div></div>
+        </div>
+
+        <div class="item">
+          <div class="art"><span class="tag r-common">服务</span><span class="rare r-common">限 3 次</span><div class="medal" style="color:#d8cfae">锻</div></div>
+          <div class="nm">炼器 · 武器强化 <small>服务</small></div>
+          <div class="effect">当前武器「玄铁重剑」基础力道 <b>+1</b>（本局最多强化 3 次）。</div>
+          <div class="synergy">当前：基础力道 6 → <b>7</b>；每手所有卦都受益</div>
+          <div class="buyrow"><div class="price"><span class="ic">◆</span> 30</div><div class="buy">购买</div></div>
+        </div>
+
+        <div class="item sold">
+          <div class="art"><span class="tag r-common">服务</span><span class="rare r-common">—</span><div class="medal" style="color:#b8b0a0">删</div></div>
+          <div class="nm">删牌 <small>服务</small></div>
+          <div class="effect">从牌组中移除 <b>1 张</b>八卦牌，精简牌组、提高关键卦上手率。</div>
+          <div class="synergy">已售出 · 本次刷新不再出现</div>
+          <div class="buyrow"><div class="price"><span class="ic">◆</span> 25</div><div class="buy disabled">已售出</div></div>
+          <div class="soldmark">已售出</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="side">
+      <div class="panel" id="wallet">
+        <div class="cap">— 灵石 —</div>
+        <div class="bigcoin"><span class="ic">◆</span><b>128</b><span>本局货币，离开坊市后保留</span></div>
+        <div class="sbtn" id="btnRefresh">刷新货架 <small>（20 灵石 · 剩余 1 次）</small></div>
+        <div class="sbtn" id="btnLeave">离开坊市 → 下一战</div>
+      </div>
+
+      <div class="panel" id="preview">
+        <div class="t">◆ 购买预览 · 火德星君令</div>
+        <div class="calc">当前火卦伤害 36 <s>→</s> 购买后 <b>54</b>（卦力 ×1.5）<br>与「噬嗑牙」联动：灼烧流 +38%</div>
+      </div>
+
+      <div class="panel" id="deck">
+        <div class="cap">— 牌组速览 · 30 张 —</div>
+        <div class="deckline"><span class="g">乾</span><span class="bar"><i style="width:40%"></i></span><span class="el" style="color:#e6ddc0">金</span><span class="n">4</span></div>
+        <div class="deckline"><span class="g">兑</span><span class="bar"><i style="width:40%"></i></span><span class="el" style="color:#e6ddc0">金</span><span class="n">4</span></div>
+        <div class="deckline"><span class="g">离</span><span class="bar"><i style="width:50%"></i></span><span class="el" style="color:#f0a17a">火</span><span class="n">5</span></div>
+        <div class="deckline"><span class="g">震</span><span class="bar"><i style="width:30%"></i></span><span class="el" style="color:#9fd08c">木</span><span class="n">3</span></div>
+        <div class="deckline"><span class="g">巽</span><span class="bar"><i style="width:30%"></i></span><span class="el" style="color:#9fd08c">木</span><span class="n">3</span></div>
+        <div class="deckline"><span class="g">坎</span><span class="bar"><i style="width:40%"></i></span><span class="el" style="color:#8fc3e8">水</span><span class="n">4</span></div>
+        <div class="deckline"><span class="g">艮</span><span class="bar"><i style="width:40%"></i></span><span class="el" style="color:#d3ae7e">土</span><span class="n">4</span></div>
+        <div class="deckline"><span class="g">坤</span><span class="bar"><i style="width:30%"></i></span><span class="el" style="color:#d3ae7e">土</span><span class="n">3</span></div>
+      </div>
+
+      <div class="panel" id="owned">
+        <div class="cap">— 已持有 · 法宝 4/5 —</div>
+        <div class="orow"><span class="ic">穗</span><b>诛邪剑穗</b><span class="r">凡品 · 妖类 +15%</span></div>
+        <div class="orow"><span class="ic">泰</span><b>泰卦真解</b><span class="r">玄品 · 泰卦抽1回灵</span></div>
+        <div class="orow"><span class="ic">牙</span><b>噬嗑牙</b><span class="r">地品 · 连击附灼烧</span></div>
+        <div class="orow"><span class="ic">印</span><b>连山印</b><span class="r">地品 · 首手 ×2</span></div>
+        <div class="gap2"></div>
+        <div class="cap" style="margin-top:3px">— 符箓 · 3 —</div>
+        <div class="orow"><span class="ic">逆</span><b>逆转符</b><span class="r">×1</span></div>
+        <div class="orow"><span class="ic">星</span><b>观星符</b><span class="r">×1</span></div>
+        <div class="orow"><span class="ic">丹</span><b>补天丹</b><span class="r">×1</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">核心玩法 · 坊市商店界面 UI 原型 v0.1 · 墨狱异志录视觉版 ｜ 依据 docs/design/核心玩法策划.md §6.2 / docs/design/视觉设计风格.md ｜ 供评审</div>
+</div>
+</body>
+</html>

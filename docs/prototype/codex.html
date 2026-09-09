@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>卦锻 · 卦象图鉴原型 v0.1</title>
+<style>
+  :root{
+    --gold:#c9a45c; --gold-dim:rgba(201,164,92,.32); --panel:#1d1710; --panel2:#241c12;
+    --line:rgba(201,164,92,.28); --txt:#ede4d0; --sub:#a8977a;
+    --red:#e05245; --green:#5fae6e; --cyan:#5ec8c0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:1920px;height:1080px;overflow:hidden;}
+  body{background:#0b0806;font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:var(--txt);}
+  #app{width:1920px;height:1080px;padding:12px 18px 10px;display:flex;flex-direction:column;gap:10px;
+    background:
+      radial-gradient(1200px 500px at 70% -10%, rgba(120,70,30,.25), transparent 60%),
+      radial-gradient(900px 600px at 10% 110%, rgba(40,80,60,.18), transparent 55%),
+      linear-gradient(180deg,#171007,#0b0806 70%);}
+  .panel{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+    border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);min-height:0;}
+  .cap{font-size:12px;letter-spacing:2px;color:var(--gold);font-weight:600;}
+
+  #hd{height:42px;flex:none;display:flex;align-items:center;gap:18px;padding:0 14px;}
+  #logo{font-size:20px;font-weight:800;color:var(--gold);letter-spacing:4px;text-shadow:0 0 14px rgba(201,164,92,.45);}
+  #logo b{color:#f0d9a8;}
+  #crumb{color:var(--sub);font-size:13px;letter-spacing:1px;}
+  #crumb i{color:var(--gold);font-style:normal;}
+  #hdr{display:flex;align-items:center;gap:10px;font-size:14px;margin-left:auto;}
+  .coin{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.35);border:1px solid var(--line);padding:4px 12px;border-radius:20px;}
+  .coin .ic{color:var(--cyan);}
+  .coin b{color:#f0d9a8;}
+
+  #body{flex:1;min-height:0;display:grid;grid-template-columns:1fr 420px;gap:12px;}
+
+  /* codex */
+  #codex{padding:10px 14px;display:flex;flex-direction:column;gap:7px;min-height:0;overflow:hidden;}
+  #codexhead{height:32px;flex:none;display:flex;align-items:center;gap:12px;}
+  #codexhead .sub{font-size:11px;color:var(--sub);}
+  #codexhead .right{margin-left:auto;font-size:11px;color:var(--sub);}
+  #codexhead .right b{color:var(--gold);}
+  #filters{height:26px;flex:none;display:flex;align-items:center;gap:8px;font-size:11px;}
+  .fbtn{padding:3px 14px;border-radius:14px;border:1px solid var(--line);color:var(--sub);background:rgba(0,0,0,.2);}
+  .fbtn.on{color:#241a0e;background:linear-gradient(180deg,#e8c983,#b98a3c);border-color:#f0d9a8;font-weight:700;}
+  #legend{height:18px;flex:none;display:flex;align-items:center;gap:18px;font-size:10px;color:var(--sub);}
+  .lg{display:flex;align-items:center;gap:5px;}
+  .dot{width:8px;height:8px;border-radius:2px;display:inline-block;}
+  #grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);gap:6px;}
+
+  .cell{border:1px solid rgba(255,255,255,.06);border-radius:7px;background:linear-gradient(180deg,#221b11,#15100a);
+    padding:4px 6px 3px;display:flex;flex-direction:column;gap:1px;position:relative;overflow:hidden;cursor:pointer;transition:.12s;}
+  .cell:hover{border-color:rgba(201,164,92,.6);transform:translateY(-1px);}
+  .cell .ctop{display:flex;align-items:center;justify-content:space-between;font-size:8px;color:#7a6c54;flex:none;line-height:1;}
+  .cell .ctop .no{color:#6a5c48;}
+  .cell .hexmini{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px;min-height:0;color:#d8cfae;}
+  .line{display:flex;gap:6px;width:52px;height:5px;}
+  .line span{background:currentColor;border-radius:2px;flex:1;}
+  .line.broken{gap:7px;}
+  .cell .cname{font-size:10px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none;color:#cfc3a6;line-height:1.2;}
+  .cell .pips{display:flex;gap:2px;justify-content:center;height:5px;flex:none;}
+  .pip{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.13);}
+  .pip.on{background:var(--gold);box-shadow:0 0 4px rgba(201,164,92,.6);}
+  .cell.locked{opacity:.5;background:linear-gradient(180deg,#17120b,#0e0b08);}
+  .cell.locked .hexmini{color:#4a4032;}
+  .cell.locked .cname{color:#5f5341;}
+  .cell.selected{border-color:var(--gold);background:linear-gradient(180deg,#332713,#1a130b);
+    box-shadow:0 0 16px rgba(201,164,92,.35), inset 0 0 18px rgba(201,164,92,.08);}
+  .cell.selected .cname{color:#f0d9a8;font-weight:700;}
+  .cell.new::after{content:'NEW';position:absolute;top:2px;right:3px;font-size:7px;font-weight:800;color:#241a0e;
+    background:linear-gradient(180deg,#e8c983,#c9a45c);padding:0 4px;border-radius:6px;letter-spacing:1px;}
+
+  /* detail */
+  #detail{padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow:hidden;}
+  #dhead{display:flex;align-items:flex-end;gap:10px;flex:none;}
+  #dname{font-size:28px;font-weight:800;color:#f0d9a8;letter-spacing:4px;line-height:1;}
+  #dno{font-size:11px;color:var(--sub);margin-left:auto;white-space:nowrap;}
+  #dsub{font-size:11px;color:var(--sub);flex:none;}
+  #dsub b{color:var(--gold);}
+
+  .hexbig{flex:none;height:126px;border-radius:10px;background:radial-gradient(circle at 50% 45%,rgba(201,164,92,.13),transparent 65%),linear-gradient(180deg,#241b10,#14100a);
+    border:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;}
+  .hexbig .line{width:120px;height:10px;gap:14px;}
+  .hexbig .line span{box-shadow:0 0 8px rgba(216,207,174,.18);}
+
+  .comp{display:flex;gap:8px;flex:none;}
+  .ccard{flex:1;border:1px solid var(--line);border-radius:8px;background:rgba(0,0,0,.22);padding:6px 9px;display:flex;align-items:center;gap:8px;}
+  .ccard .csym{font-size:24px;line-height:1;color:var(--gold);}
+  .ccard .ct{font-size:10px;color:var(--sub);line-height:1.5;}
+  .ccard .ct b{display:block;font-size:12px;color:var(--txt);}
+
+  .sec{flex:none;border-top:1px solid rgba(255,255,255,.06);padding-top:7px;display:flex;flex-direction:column;gap:3px;}
+  .sec .st{font-size:10px;color:var(--gold);letter-spacing:2px;}
+  .sec .sv{font-size:11px;color:#cfc3a6;line-height:1.6;}
+  .sec .sv b{color:#f0a17a;}
+  .sec .sv i{color:#8fc3e8;font-style:normal;}
+  .tagrow{display:flex;gap:6px;flex-wrap:wrap;}
+  .tg{font-size:10px;padding:2px 9px;border-radius:10px;border:1px solid;}
+  .tg.wood{color:#9fd08c;border-color:rgba(111,174,92,.5);background:rgba(111,174,92,.12);}
+  .tg.fire{color:#f0a17a;border-color:rgba(224,122,69,.5);background:rgba(224,122,69,.12);}
+  .tg.gold{color:#f0c060;border-color:rgba(240,192,96,.5);background:rgba(240,192,96,.12);}
+  .tg.cyan{color:#8ff0e6;border-color:rgba(94,200,192,.5);background:rgba(94,200,192,.12);}
+
+  .mastery{flex:none;display:flex;align-items:center;gap:8px;}
+  .mastery .bar{flex:1;height:9px;border-radius:6px;background:#0e0b08;border:1px solid rgba(255,255,255,.06);overflow:hidden;}
+  .mastery .bar i{display:block;height:100%;width:80%;background:linear-gradient(90deg,#7a5a2a,#e8c983);}
+  .mastery .mt{font-size:10px;color:var(--sub);white-space:nowrap;}
+  .mastery .mt b{color:var(--gold);}
+
+  #donebar{flex:none;margin-top:auto;border-top:1px solid rgba(255,255,255,.06);padding-top:8px;display:flex;flex-direction:column;gap:4px;}
+  #donebar .row{display:flex;justify-content:space-between;font-size:10px;color:var(--sub);}
+  #donebar .row b{color:var(--gold);}
+  #donebar .bar{height:10px;border-radius:6px;background:#0e0b08;border:1px solid rgba(255,255,255,.06);overflow:hidden;}
+  #donebar .bar i{display:block;height:100%;width:42%;background:linear-gradient(90deg,#5a4422,#e8c983);}
+
+  .foot{text-align:center;font-size:10px;color:#6a5c48;letter-spacing:1px;flex:none;line-height:1;}
+</style>
+  <link rel="stylesheet" href="./visual-style.css">
+</head>
+<body>
+<div id="app">
+  <div id="hd" class="panel">
+    <div id="logo">《<b>卦锻</b>》</div>
+    <div id="crumb">天机阁 · <i>卦象图鉴</i> ｜ 已发现 27 / 64 ｜ 第二境</div>
+    <div id="hdr">
+      <div class="coin"><span class="ic">◆</span><b>灵石 128</b></div>
+      <div class="coin"><span class="ic">◈</span>道行 340</div>
+      <div class="coin">天机值 <b>3</b></div>
+    </div>
+  </div>
+
+  <div id="body">
+    <div class="panel" id="codex">
+      <div id="codexhead">
+        <div class="cap">— 六十四卦 · 8×8 全图 —</div>
+        <div class="sub">行为 = 下卦 ｜ 修饰 = 上卦 ｜ 顺序决定卦义</div>
+        <div class="right">已发现 <b>27</b> / 64 ｜ 精通 <b>9</b></div>
+      </div>
+      <div id="filters">
+        <span class="fbtn on">全部</span><span class="fbtn">已发现</span><span class="fbtn">未发现</span>
+        <span class="fbtn">按五行</span><span class="fbtn">按上卦</span>
+        <span style="margin-left:auto;color:var(--sub)">点击已发现的卦查看详情</span>
+      </div>
+      <div id="legend">
+        <span class="lg"><span class="dot" style="background:#d8cfae"></span>已发现</span>
+        <span class="lg"><span class="dot" style="background:#4a4032"></span>未发现</span>
+        <span class="lg"><span class="dot" style="background:#e8c983"></span>熟练度</span>
+        <span class="lg"><span class="dot" style="background:#c9a45c;box-shadow:0 0 5px #c9a45c"></span>本卦选中</span>
+        <span class="lg" style="color:#e8c983">◆ 精通：该卦伤害 +20%</span>
+      </div>
+      <div id="grid"></div>
+    </div>
+
+    <div class="panel" id="detail">
+      <div id="dhead"><div id="dname">火雷噬嗑</div><div id="dno">第 21 卦 / 64</div></div>
+      <div id="dsub">上卦 <b>离 ☲ 火</b>（修饰：明·会心）｜ 下卦 <b>震 ☳ 木</b>（行为：连击）</div>
+
+      <div class="hexbig">
+        <div class="line solid"><span></span></div>
+        <div class="line broken"><span></span><span></span></div>
+        <div class="line solid"><span></span></div>
+        <div class="line broken"><span></span><span></span></div>
+        <div class="line broken"><span></span><span></span></div>
+        <div class="line solid"><span></span></div>
+      </div>
+
+      <div class="comp">
+        <div class="ccard"><div class="csym">☲</div><div class="ct">上卦 · 外<b>离 · 火</b>修饰：明（会心）</div></div>
+        <div class="ccard"><div class="csym">☳</div><div class="ct">下卦 · 内<b>震 · 木</b>行为：连击</div></div>
+      </div>
+
+      <div class="sec">
+        <div class="st">— 卦象效果 —</div>
+        <div class="sv">连击 <b>3 段</b>；每段可会心（<b>×1.5</b>）；每段附加 <b>1 层灼烧</b>。<br><i>“颐中有物，啮而后合。”</i></div>
+      </div>
+
+      <div class="sec">
+        <div class="st">— 五行结算 —</div>
+        <div class="tagrow">
+          <span class="tg wood">攻击五行 · 木</span>
+          <span class="tg gold">克制 · 土 ×1.5</span>
+          <span class="tg fire">被克 · 金 ×0.67</span>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="st">— 伤害示例 —</div>
+        <div class="sv">基础 12 × 卦倍率 1.6 = 19.2 / 段<br>会心段 ×1.5 = <b>28.8</b> ｜ 三段合计约 <b>58~72</b>（含灼烧）</div>
+      </div>
+
+      <div class="sec">
+        <div class="st">— 顺序即卦义 —</div>
+        <div class="sv">换位 = <b>雷火丰</b>（上震下离）：攻击五行变<b>火</b>，可吃「火德星君令」×1.5，但失去会心修饰。</div>
+      </div>
+
+      <div class="sec">
+        <div class="st">— 联动法宝 —</div>
+        <div class="tagrow">
+          <span class="tg cyan">噬嗑牙 · 每段 +1 灼烧</span>
+          <span class="tg cyan">连山印 · 首手 ×2</span>
+        </div>
+      </div>
+
+      <div class="mastery">
+        <div class="mt">熟练度 <b>4 / 5</b></div>
+        <div class="bar"><i></i></div>
+        <div class="mt">使用 17 次 · 再 3 次升级</div>
+      </div>
+
+      <div id="donebar">
+        <div class="row"><span>图鉴完成度</span><span><b>27</b> / 64（42%）</span></div>
+        <div class="bar"><i></i></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">核心玩法 · 卦象图鉴界面 UI 原型 v0.1 · 墨狱异志录视觉版 ｜ 依据 docs/design/核心玩法策划.md §4.2 / docs/design/视觉设计风格.md ｜ 供评审</div>
+</div>
+
+<script>
+const TRI = {
+  '乾': {lines:[1,1,1], el:'金', sym:'☰'},
+  '兑': {lines:[1,1,0], el:'金', sym:'☱'},
+  '离': {lines:[1,0,1], el:'火', sym:'☲'},
+  '震': {lines:[1,0,0], el:'木', sym:'☳'},
+  '巽': {lines:[0,1,1], el:'木', sym:'☴'},
+  '坎': {lines:[0,1,0], el:'水', sym:'☵'},
+  '艮': {lines:[0,0,1], el:'土', sym:'☶'},
+  '坤': {lines:[0,0,0], el:'土', sym:'☷'}
+};
+const ORDER = ['乾','兑','离','震','巽','坎','艮','坤'];
+const NAMES = [
+ ['乾为天','天泽履','天火同人','天雷无妄','天风姤','天水讼','天山遁','天地否'],
+ ['泽天夬','兑为泽','泽火革','泽雷随','泽风大过','泽水困','泽山咸','泽地萃'],
+ ['火天大有','火泽睽','离为火','火雷噬嗑','火风鼎','火水未济','火山旅','火地晋'],
+ ['雷天大壮','雷泽归妹','雷火丰','震为雷','雷风恒','雷水解','雷山小过','雷地豫'],
+ ['风天小畜','风泽中孚','风火家人','风雷益','巽为风','风水涣','风山渐','风地观'],
+ ['水天需','水泽节','水火既济','水雷屯','水风井','坎为水','水山蹇','水地比'],
+ ['山天大畜','山泽损','山火贲','山雷颐','山风蛊','山水蒙','艮为山','山地剥'],
+ ['地天泰','地泽临','地火明夷','地雷复','地风升','地水师','地山谦','坤为地']
+];
+const DISC = new Set(['0-0','0-1','0-2','0-3','0-4','0-5','0-6','0-7','1-0','1-1','1-3','1-6','2-0','2-3','2-4','2-6','2-7','3-0','3-1','3-2','4-3','4-4','5-0','5-2','5-5','6-6','7-0']);
+const MASTERY = {'0-0':5,'0-1':4,'0-2':3,'1-0':4,'1-1':3,'2-0':3,'2-3':4,'2-6':2,'3-0':2,'3-2':3,'4-3':2,'5-0':2,'5-2':5,'7-0':2};
+const SELECTED = '2-3';
+const grid = document.getElementById('grid');
+for (let r = 0; r < 8; r++) {
+  for (let c = 0; c < 8; c++) {
+    const upName = ORDER[r], lowName = ORDER[c], up = TRI[upName], low = TRI[lowName];
+    const key = r + '-' + c;
+    const unlocked = DISC.has(key);
+    const full = low.lines.concat(up.lines); // bottom -> top
+    const display = full.slice().reverse(); // top -> bottom
+    const lines = display.map(v => v
+      ? '<div class="line solid"><span></span></div>'
+      : '<div class="line broken"><span></span><span></span></div>').join('');
+    const m = MASTERY[key] || 0;
+    const pips = unlocked ? Array.from({length:5}, (_,i) => '<span class="pip' + (i < m ? ' on' : '') + '"></span>').join('') : '';
+    const cls = ['cell', unlocked ? 'unlocked' : 'locked', key === SELECTED ? 'selected' : '', unlocked && m === 5 ? 'mastered' : ''].join(' ');
+    grid.insertAdjacentHTML('beforeend',
+      '<div class="' + cls + '" title="' + (unlocked ? NAMES[r][c] : '未发现') + '">' +
+        '<div class="ctop"><span class="no">' + (r*8+c+1) + '</span><span>' + (unlocked ? upName + '上' + lowName + '下' : '???') + '</span></div>' +
+        '<div class="hexmini">' + lines + '</div>' +
+        '<div class="cname">' + (unlocked ? NAMES[r][c] : '？？？') + '</div>' +
+        '<div class="pips">' + pips + '</div>' +
+      '</div>');
+  }
+}
+</script>
+</body>
+</html>

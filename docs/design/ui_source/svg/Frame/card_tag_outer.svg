@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="64" viewBox="0 0 128 64">
+<defs><linearGradient id="tagOuter" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F0E3BB" stop-opacity="1"/><stop offset="0.5" stop-color="#C2AA72" stop-opacity="1"/><stop offset="1" stop-color="#8A6E3C" stop-opacity="1"/></linearGradient><filter id="rough" x="-25%" y="-25%" width="150%" height="150%"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="3" seed="67" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="3" xChannelSelector="R" yChannelSelector="G"/></filter></defs>
+<path d="M6,58 L122,58 L122,28 L64,4 L6,28 Z" fill="url(#tagOuter)" filter="url(#rough)"/><path d="M12,52 L116,52 L116,30 L64,10 L12,30 Z" fill="none" stroke="#070808" stroke-opacity="0.35" stroke-width="1.5"/><path d="M46,40 L64,22 L82,40" fill="none" stroke="#070808" stroke-width="6" stroke-opacity="0.8" stroke-linecap="round"/>
+</svg>

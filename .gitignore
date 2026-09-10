@@ -108,3 +108,6 @@ InitTestScene*.unity*
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
 
+# Unity player build output (root bin/ export folder)
+/[Bb]in/
+

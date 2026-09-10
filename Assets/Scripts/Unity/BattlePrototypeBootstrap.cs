@@ -97,13 +97,13 @@ namespace BalartroLike.Unity
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreate()
         {
-            if (FindObjectOfType<BattlePrototypeBootstrap>() != null)
-            {
-                return;
-            }
+            //if (FindObjectOfType<BattlePrototypeBootstrap>() != null)
+            //{
+            //    return;
+            //}
 
-            GameObject root = new GameObject("BattlePrototypeBootstrap");
-            root.AddComponent<BattlePrototypeBootstrap>();
+            //GameObject root = new GameObject("BattlePrototypeBootstrap");
+            //root.AddComponent<BattlePrototypeBootstrap>();
         }
 
         private void Awake()

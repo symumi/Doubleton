@@ -1,7 +1,9 @@
 {
     "name": "BalartroLike.Runtime",
     "rootNamespace": "BalartroLike",
-    "references": [],
+    "references": [
+        "Unity.TextMeshPro"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

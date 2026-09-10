@@ -1,0 +1,34 @@
+# UI 动效参数（外部可调，改这里不需要改 C#）
+# key: 动效标识 | duration: 秒 | easing: Linear/InQuad/OutQuad/InCubic/OutCubic/InOutCubic/OutBack
+# offsetY: 起始纵向偏移(px) | startScale/endScale/punchScale: 缩放 | fadeStart: 开始淡出的进度(1=不淡出)
+# shakeDistance/shakeFrequency: 抖动 | delay: 播放前延迟(秒)
+key,duration,easing,offsetY,startScale,endScale,shakeDistance,shakeFrequency,fadeStart,punchScale,delay
+card_select,0.14,OutCubic,6,1.03,1,0,0,1,1.08,0
+card_deselect,0.11,OutQuad,0,1,1,0,0,1,1,0
+card_to_altar,0.26,InOutCubic,0,1,1,0,0,1,1,0
+hexagram_merge,0.28,OutCubic,0,1.06,1,0,0,1,1.02,0
+hexagram_name,0.22,OutQuad,12,1,1,0,0,1,1,0
+hexagram_line_reveal,0.06,Linear,0,1,1,0,0,1,1,0
+damage_number,0.2,OutBack,72,1.35,1,0,0,0.6,1,0
+damage_number_critical,0.32,OutBack,88,1.6,1,0,0,0.7,1,0
+shield_absorb,0.18,OutQuad,64,1.1,1,0,0,0.58,1,0
+enemy_intent_scan,0.22,Linear,0,1,1,0,0,1,1,0
+hit_shake,0.18,OutQuad,0,1,1,8,2,1,1,0
+bar_fill,0.26,OutQuad,0,1,1,0,0,1,1,0
+energy_spend,0.04,Linear,0,1,1,0,0,1,1,0
+status_pulse,0.16,OutQuad,0,1.1,1,0,0,1,1.12,0
+discard_card,0.22,InCubic,0,1,0.9,0,0,0.7,1,0
+draw_card,0.24,OutCubic,0,0.9,1,0,0,1,1,0
+invalid_shake,0.13,Linear,0,1,1,6,0,1,1,0
+page_open,0.18,OutCubic,0,0.94,1,0,0,1,1,0
+popup_open,0.2,OutBack,0,0.9,1,0,0,1,1,0
+popup_close,0.14,InQuad,0,1,0.96,0,0,0.6,1,0
+toast_in,0.16,OutQuad,18,1,1,0,0,1,1,0
+toast_hold,1.6,Linear,0,1,1,0,0,1,1,0
+toast_out,0.16,InQuad,0,1,0.98,0,0,0.2,1,0
+tooltip_in,0.12,Linear,0,1,1,0,0,1,1,0
+shop_refresh,0.24,OutCubic,0,1,1,0,0,1,1,0
+purchase,0.26,OutQuad,-24,1,1,0,0,0.7,1,0
+codex_unlock,0.38,OutCubic,0,1,1,0,0,1,1,0
+turn_banner,0.3,Linear,0,1,1,0,0,1,1,0
+realm_promotion,0.9,OutCubic,0,1.1,1,0,0,1,1,0
